@@ -1,0 +1,19 @@
+[
+  {
+    "title": "MySQL Client Thread Activity",
+    "series": [
+      {
+        "legend": "Peak Threads Connected",
+        "expr": "avg by (service_name) (max_over_time(mysql_global_status_threads_connected{service_name=~\"$service_name\"}[$interval]) or\nmax_over_time(mysql_global_status_threads_connected{service_name=~\"$service_name\"}[5m]))"
+      },
+      {
+        "legend": "Peak Threads Running",
+        "expr": "avg by (service_name) (max_over_time(mysql_global_status_threads_running{service_name=~\"$service_name\"}[$interval]) or\nmax_over_time(mysql_global_status_threads_running{service_name=~\"$service_name\"}[5m]))"
+      },
+      {
+        "legend": "Avg Threads Running",
+        "expr": "avg by (service_name) (avg_over_time(mysql_global_status_threads_running{service_name=~\"$service_name\"}[$interval]) or \navg_over_time(mysql_global_status_threads_running{service_name=~\"$service_name\"}[5m]))"
+      }
+    ]
+  }
+]
