@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	xfont "golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
 	"image/color"
 
@@ -30,6 +31,12 @@ import (
 
 //go:embed resources/fonts/Poppins-Medium.ttf
 var poppinsTTF []byte
+
+//go:embed resources/fonts/Poppins-Bold.ttf
+var poppinsBoldTTF []byte
+
+var poppinsFont = font.Font{Typeface: "Poppins", Size: vg.Points(10)}
+var poppinsBoldFont = font.Font{Typeface: "Poppins", Weight: xfont.WeightBold, Size: vg.Points(10)}
 
 const LegendPadding = 8
 
@@ -168,18 +175,22 @@ func generateGraph(endpoint, service, interval string, series []SeriesConfig, ti
 		pts := make(plotter.XYs, 0, len(vmResp.Data.Result[0].Values))
 		for _, v := range vmResp.Data.Result[0].Values {
 			if len(v) != 2 {
+				fmt.Fprintf(os.Stderr, "error: not enough values")
 				continue
 			}
 			t, ok := v[0].(float64)
 			if !ok {
+				fmt.Fprintf(os.Stderr, "error: could not parse timestamp")
 				continue
 			}
 			valStr, ok := v[1].(string)
 			if !ok {
+				fmt.Fprintf(os.Stderr, "error: could not parse string value")
 				continue
 			}
 			val, err := strconv.ParseFloat(valStr, 64)
 			if err != nil {
+				fmt.Fprintf(os.Stderr, "error: could not parse float value")
 				continue
 			}
 
@@ -196,6 +207,7 @@ func generateGraph(endpoint, service, interval string, series []SeriesConfig, ti
 		}
 
 		if len(pts) < 1 {
+			fmt.Fprintf(os.Stderr, "error: no xy points")
 			continue
 		}
 
@@ -237,43 +249,58 @@ func generateGraph(endpoint, service, interval string, series []SeriesConfig, ti
 
 	tableCanvas := draw.Crop(dc, 0, 0, 0, -(4 * vg.Inch))
 
-	fnt := font.From(plot.DefaultFont, vg.Points(10))
-	sty := text.Style{
-		Font:    fnt,
+	styleNormal := text.Style{
+		Font:    poppinsFont,
+		Color:   color.Black,
+		Handler: plot.DefaultTextHandler,
+	}
+
+	styleBold := text.Style{
+		Font:    poppinsBoldFont,
 		Color:   color.Black,
 		Handler: plot.DefaultTextHandler,
 	}
 
 	colColor := vg.Points(10)
 	colName := vg.Points(30)
-	colMin := tableCanvas.Max.X * 0.4
-	colMax := tableCanvas.Max.X * 0.6
-	colAvg := tableCanvas.Max.X * 0.8
+	colMin := tableCanvas.Max.X * 0.55
+	colMax := tableCanvas.Max.X * 0.70
+	colAvg := tableCanvas.Max.X * 0.85
 
 	y := tableCanvas.Max.Y - vg.Points(15)
 
-	tableCanvas.FillText(sty, vg.Point{X: colMin, Y: y}, "Min")
-	tableCanvas.FillText(sty, vg.Point{X: colMax, Y: y}, "Max")
-	tableCanvas.FillText(sty, vg.Point{X: colAvg, Y: y}, "Average")
+	tableCanvas.FillText(styleBold, vg.Point{X: colName, Y: y}, "Name")
+	tableCanvas.FillText(styleBold, vg.Point{X: colMin, Y: y}, "Min")
+	tableCanvas.FillText(styleBold, vg.Point{X: colMax, Y: y}, "Max")
+	tableCanvas.FillText(styleBold, vg.Point{X: colAvg, Y: y}, "Average")
+
+	sepStyle := draw.LineStyle{
+		Color: color.Gray{Y: 220},
+		Width: vg.Points(0.5),
+	}
 
 	for _, row := range tableRows {
+		// Draw separator line above the row
+		lineY := y - vg.Points(4)
+		tableCanvas.StrokeLine2(sepStyle, colColor, lineY, tableCanvas.Max.X, lineY)
+
 		y -= vg.Points(15)
 
 		boxSize := vg.Points(8)
 		boxRect := []vg.Point{
-			{X: colColor, Y: y + vg.Points(2)},
-			{X: colColor + boxSize, Y: y + vg.Points(2)},
-			{X: colColor + boxSize, Y: y + vg.Points(2) + boxSize},
-			{X: colColor, Y: y + vg.Points(2) + boxSize},
+			{X: colColor, Y: y},
+			{X: colColor + boxSize, Y: y},
+			{X: colColor + boxSize, Y: y + boxSize},
+			{X: colColor, Y: y + boxSize},
 		}
 		tableCanvas.FillPolygon(row.Color, boxRect)
 
-		tableCanvas.FillText(sty, vg.Point{X: colName, Y: y}, row.Legend)
+		tableCanvas.FillText(styleNormal, vg.Point{X: colName, Y: y}, row.Legend)
 
 		if row.Min <= row.Max {
-			tableCanvas.FillText(sty, vg.Point{X: colMin, Y: y}, fmt.Sprintf("%.4g", row.Min))
-			tableCanvas.FillText(sty, vg.Point{X: colMax, Y: y}, fmt.Sprintf("%.4g", row.Max))
-			tableCanvas.FillText(sty, vg.Point{X: colAvg, Y: y}, fmt.Sprintf("%.4g", row.Avg))
+			tableCanvas.FillText(styleNormal, vg.Point{X: colMin, Y: y}, fmt.Sprintf("%.4g", row.Min))
+			tableCanvas.FillText(styleNormal, vg.Point{X: colMax, Y: y}, fmt.Sprintf("%.4g", row.Max))
+			tableCanvas.FillText(styleNormal, vg.Point{X: colAvg, Y: y}, fmt.Sprintf("%.4g", row.Avg))
 		}
 	}
 	f, err := os.Create(output)
@@ -299,22 +326,8 @@ func toSnakeCase(s string) string {
 }
 
 func main() {
-	ttf, err := opentype.Parse(poppinsTTF)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error parsing embedded font: %v\n", err)
-		os.Exit(1)
-	}
 
-	poppinsFont := font.Font{Typeface: "Poppins"}
-	font.DefaultCache.Add([]font.Face{
-		{
-			Font: poppinsFont,
-			Face: ttf,
-		},
-	})
-
-	plot.DefaultFont = poppinsFont
-
+	// Flags
 	endpoint := flag.String("endpoint", "", "VictoriaMetrics endpoint URL (required)")
 	service := flag.String("service", "", "Service name for query substitution (required)")
 	interval := flag.String("interval", "5m", "Interval duration string for query substitution (e.g., 5m, 1h)")
@@ -355,6 +368,32 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error: failed to parse graphs.json: %v\n", err)
 		os.Exit(1)
 	}
+
+	// Load fonts
+	ttf, err := opentype.Parse(poppinsTTF)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error parsing embedded font: %v\n", err)
+		os.Exit(1)
+	}
+
+	ttfBold, err := opentype.Parse(poppinsBoldTTF)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error parsing embedded bold font: %v\n", err)
+		os.Exit(1)
+	}
+
+	font.DefaultCache.Add([]font.Face{
+		{
+			Font: poppinsFont,
+			Face: ttf,
+		},
+		{
+			Font: poppinsBoldFont,
+			Face: ttfBold,
+		},
+	})
+
+	plot.DefaultFont = poppinsFont
 
 	for _, cfg := range configs {
 		if len(cfg.Series) == 0 {
