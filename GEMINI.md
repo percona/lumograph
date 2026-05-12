@@ -27,6 +27,7 @@ The project is currently a single-file Go application (`main.go`) that handles:
 | Flag | Description | Default |
 |------|-------------|---------|
 | `-endpoint` | VictoriaMetrics URL (Required) | |
+| `-fetch-dashboards` | Directory containing YAML config files to fetch Grafana dashboards from | |
 | `-service` | Service name for query substitution (Required) | |
 | `-interval` | Interval string for query substitution | `5m` |
 | `-start` | Start time duration | `1h` |

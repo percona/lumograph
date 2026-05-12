@@ -5,6 +5,7 @@ go 1.25.5
 require (
 	golang.org/x/image v0.39.0
 	gonum.org/v1/plot v0.17.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
