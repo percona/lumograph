@@ -30,9 +30,9 @@ The project is currently a single-file Go application (`main.go`) that handles:
 | `-fetch-dashboards` | Directory containing YAML config files to fetch Grafana dashboards from | |
 | `-service` | Service name for query substitution (Required) | |
 | `-interval` | Interval string for query substitution | `5m` |
-| `-start` | Start time duration | `1h` |
-| `-end` | End time duration (from now) | `0s` |
-| `-token` | Bearer token for auth (Required) | |
+| `-start` | Start time (YYYY-MM-DD HH:MM:SS) | 24h ago |
+| `-end` | End time (YYYY-MM-DD HH:MM:SS) | now |
+| `-token` | Bearer token for auth. Can also be set via `PMM_TOKEN` environment variable. | |
 | `-debug` | Print detailed HTTP request/response info | `false` |
 
 ### Configuration

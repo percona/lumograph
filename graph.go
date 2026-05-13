@@ -16,6 +16,7 @@ import (
 
 	"image/color"
 
+	"go.uber.org/zap"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/text"
@@ -125,7 +126,7 @@ func (t CustomYTicker) Ticks(min, max float64) []plot.Tick {
 	return ticks
 }
 
-func generateGraph(endpoint, service, interval string, cfg *GraphConfig, token, output string, startTime, endTime time.Time, debug bool) error {
+func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) error {
 	p := plot.New()
 	p.Title.Text = cfg.Title
 	p.Title.Padding = 20
@@ -150,7 +151,7 @@ func generateGraph(endpoint, service, interval string, cfg *GraphConfig, token, 
 		Width: vg.Points(0.5),
 	})
 
-	base, _ := url.Parse(endpoint)
+	base, _ := url.Parse(lumoConfig.Endpoint)
 	base.Path = "/victoriametrics/prometheus/api/v1/query_range"
 	var tableRows []TableRow
 	globalMaxY := -math.MaxFloat64
@@ -158,45 +159,45 @@ func generateGraph(endpoint, service, interval string, cfg *GraphConfig, token, 
 	for i, s := range cfg.Series {
 
 		q := base.Query()
-		interpolatedExpr := strings.ReplaceAll(s.Expr, "$service_name", service)
-		interpolatedExpr = strings.ReplaceAll(interpolatedExpr, "$interval", interval)
+		interpolatedExpr := strings.ReplaceAll(s.Expr, "$service_name", lumoConfig.Service)
+		interpolatedExpr = strings.ReplaceAll(interpolatedExpr, "$interval", lumoConfig.Interval)
 		q.Set("query", interpolatedExpr)
 		q.Set("step", "60s")
-		q.Set("start", fmt.Sprintf("%d", startTime.Unix()))
-		q.Set("end", fmt.Sprintf("%d", endTime.Unix()))
+		q.Set("start", fmt.Sprintf("%d", lumoConfig.Start.Unix()))
+		q.Set("end", fmt.Sprintf("%d", lumoConfig.End.Unix()))
 		base.RawQuery = q.Encode()
 
 		req, err := http.NewRequest("POST", base.String(), nil)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: creating request for %s: %v\n", s.Legend, err)
+			zap.S().Errorf("error: creating request for %s: %v", s.Legend, err)
 			continue
 		}
-		if token != "" {
-			req.Header.Set("Authorization", "Bearer "+token)
+		if lumoConfig.Token != "" {
+			req.Header.Set("Authorization", "Bearer "+lumoConfig.Token)
 		}
 
-		if debug {
+		if lumoConfig.Debug {
 			dump, err := httputil.DumpRequestOut(req, true)
 			if err == nil {
-				fmt.Fprintf(os.Stderr, "--- DEBUG: HTTP Request (%s) ---\n%s\n---------------------------\n", s.Legend, dump)
+				zap.S().Debugf("--- DEBUG: HTTP Request (%s) ---\n%s\n---------------------------", s.Legend, dump)
 			}
 		}
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: failed to query VictoriaMetrics for %s: %v\n", s.Legend, err)
+			zap.S().Errorf("error: failed to query VictoriaMetrics for %s: %v", s.Legend, err)
 			continue
 		}
 
-		if debug {
+		if lumoConfig.Debug {
 			dump, err := httputil.DumpResponse(resp, true)
 			if err == nil {
-				fmt.Fprintf(os.Stderr, "--- DEBUG: HTTP Response (%s) ---\n%s\n----------------------------\n", s.Legend, dump)
+				zap.S().Debugf("--- DEBUG: HTTP Response (%s) ---\n%s\n----------------------------", s.Legend, dump)
 			}
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			fmt.Fprintf(os.Stderr, "error: unexpected HTTP status for %s: %d\n", s.Legend, resp.StatusCode)
+			zap.S().Errorf("error: unexpected HTTP status for %s: %d", s.Legend, resp.StatusCode)
 			resp.Body.Close()
 			continue
 		}
@@ -204,22 +205,20 @@ func generateGraph(endpoint, service, interval string, cfg *GraphConfig, token, 
 		body, err := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: reading response for %s: %v\n", s.Legend, err)
+			zap.S().Errorf("error: reading response for %s: %v", s.Legend, err)
 			continue
 		}
 
 		var vmResp VMResponse
 		if err := json.Unmarshal(body, &vmResp); err != nil {
-			fmt.Fprintf(os.Stderr, "error: parsing response for %s: %v\n", s.Legend, err)
+			zap.S().Errorf("error: parsing response for %s: %v", s.Legend, err)
 			continue
 		}
 
-		if debug {
-			fmt.Fprintf(os.Stderr, "--- DEBUG: RAW METRICS (%s) ---\n%+v\n---------------------------\n", s.Legend, vmResp)
-		}
+		zap.S().Debugf("--- DEBUG: RAW METRICS (%s) ---\n%+v\n---------------------------", s.Legend, vmResp)
 
 		if vmResp.Status != "success" || len(vmResp.Data.Result) == 0 {
-			fmt.Fprintf(os.Stderr, "warning: no data returned for %s\n", s.Legend)
+			zap.S().Errorf("warning: no data returned for %s", s.Legend)
 			continue
 		}
 
@@ -232,22 +231,22 @@ func generateGraph(endpoint, service, interval string, cfg *GraphConfig, token, 
 			pts := make(plotter.XYs, 0, len(result.Values))
 			for _, v := range result.Values {
 				if len(v) != 2 {
-					fmt.Fprintf(os.Stderr, "error: not enough values")
+					zap.S().Errorf("error: not enough values")
 					continue
 				}
 				t, ok := v[0].(float64)
 				if !ok {
-					fmt.Fprintf(os.Stderr, "error: could not parse timestamp")
+					zap.S().Errorf("error: could not parse timestamp")
 					continue
 				}
 				valStr, ok := v[1].(string)
 				if !ok {
-					fmt.Fprintf(os.Stderr, "error: could not parse string value")
+					zap.S().Errorf("error: could not parse string value")
 					continue
 				}
 				val, err := strconv.ParseFloat(valStr, 64)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "error: could not parse float value")
+					zap.S().Errorf("error: could not parse float value")
 					continue
 				}
 
@@ -267,7 +266,7 @@ func generateGraph(endpoint, service, interval string, cfg *GraphConfig, token, 
 			}
 
 			if len(pts) < 1 {
-				fmt.Fprintf(os.Stderr, "error: no xy points")
+				zap.S().Errorf("error: no xy points")
 				continue
 			}
 
@@ -277,13 +276,11 @@ func generateGraph(endpoint, service, interval string, cfg *GraphConfig, token, 
 				legendText = strings.ReplaceAll(legendText, "{{ "+key+" }}", val)
 			}
 
-			if debug {
-				fmt.Fprintf(os.Stderr, "--- DEBUG: PARSED METRICS (%s) ---\n%+v\n---------------------------\n", legendText, pts)
-			}
+			zap.S().Debugf("--- DEBUG: PARSED METRICS (%s) ---\n%+v\n---------------------------", legendText, pts)
 
 			line, err := plotter.NewLine(pts)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "error: creating line for %s: %v\n", legendText, err)
+				zap.S().Errorf("error: creating line for %s: %v", legendText, err)
 				continue
 			}
 			seriesColor := Palette[(i+resultIdx)%len(Palette)]
@@ -438,6 +435,7 @@ func generateGraph(endpoint, service, interval string, cfg *GraphConfig, token, 
 		return fmt.Errorf("saving plot to png: %w", err)
 	}
 
-	fmt.Printf("Saved chart to %s\n", output)
+	zap.S().Infof("Saved chart to %s", output)
+
 	return nil
 }
