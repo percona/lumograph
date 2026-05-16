@@ -29,16 +29,24 @@ type GrafanaDashboard struct {
 
 func fetchDashboards(dirPath string) {
 
-	files, _ := filepath.Glob(filepath.Join(dirPath, "*.yaml"))
-	ymlFiles, _ := filepath.Glob(filepath.Join(dirPath, "*.yml"))
-	files = append(files, ymlFiles...)
+	targetFiles := []string{"mysql.yaml", "pgsql.yaml", "mongo.yaml", "valkey.yaml"}
+	var files []string
+
+	for _, f := range targetFiles {
+		path := filepath.Join(dirPath, f)
+		if _, err := os.Stat(path); err == nil {
+			files = append(files, path)
+		}
+	}
 
 	if len(files) == 0 {
-		zap.S().Info("No yaml files found in", dirPath)
+		zap.S().Info("None of the targeted yaml files found in ", dirPath)
 		return
 	}
 
 	baseUrl := "https://raw.githubusercontent.com/percona/pmm/refs/heads/v3/dashboards/dashboards/"
+
+	var globalConfigs []GraphConfig
 
 	for _, file := range files {
 		zap.S().Infof("Processing %s...", file)
@@ -50,8 +58,10 @@ func fetchDashboards(dirPath string) {
 
 		var config struct {
 			Dashboards []struct {
-				Name   string `yaml:"name"`
-				Subdir string `yaml:"subdir"`
+				Name   string   `yaml:"name"`
+				Group  string   `yaml:"group"`
+				Subdir string   `yaml:"subdir"`
+				Graphs []string `yaml:"graphs"`
 			} `yaml:"dashboards"`
 		}
 
@@ -61,17 +71,14 @@ func fetchDashboards(dirPath string) {
 		}
 
 		for _, dash := range config.Dashboards {
+
 			if dash.Name == "" {
+				zap.S().Error("    Dashboard missing name.")
 				continue
 			}
+
 			snakeName := toSnakeCase(dash.Name)
 			fileName := snakeName + ".json"
-			outPath := filepath.Join(dirPath, fileName)
-
-			if _, err := os.Stat(outPath); err == nil {
-				zap.S().Infof("    File %s already exists. Skipping.", fileName)
-				continue
-			}
 
 			// Construct fetch URL. If subdir exists, include it.
 			subdir := dash.Subdir
@@ -117,8 +124,20 @@ func fetchDashboards(dirPath string) {
 			}
 
 			var lumoConfigs []GraphConfig
+
+			// Build a fast-lookup map for the requested graphs
+			wantedGraphs := make(map[string]bool)
+			for _, g := range dash.Graphs {
+				wantedGraphs[g] = true
+			}
+
 			for _, p := range grafanaDash.Panels {
 				if p.Type != "graph" && p.Type != "timeseries" {
+					continue
+				}
+
+				// Only transform graphs specifically mentioned in the YAML
+				if !wantedGraphs[p.Title] {
 					continue
 				}
 
@@ -137,24 +156,37 @@ func fetchDashboards(dirPath string) {
 
 				lumoConfigs = append(lumoConfigs, GraphConfig{
 					Title:  p.Title,
+					Group:  dash.Group,
 					Unit:   unit,
 					Series: series,
 				})
 			}
 
-			transformed, err := json.MarshalIndent(lumoConfigs, "", "  ")
-			if err != nil {
-				zap.S().Infof("    Error marshaling transformed JSON: %v", err)
-				continue
-			}
-
-			if err := os.WriteFile(outPath, transformed, 0644); err != nil {
-				zap.S().Infof("    Error writing file %s: %v", outPath, err)
-				continue
-			}
-
-			zap.S().Infof("    Successfully downloaded and transformed %s", fileName)
+			globalConfigs = append(globalConfigs, lumoConfigs...)
+			zap.S().Infof("    Successfully downloaded and processed %s", fileName)
 		}
+
 	}
+
+	// Save the globally aggregated configs to a single graphs.json file
+	if len(globalConfigs) > 0 {
+		outFileName := "graphs.json"
+		outPath := filepath.Join(dirPath, outFileName)
+
+		transformed, err := json.MarshalIndent(globalConfigs, "", "  ")
+		if err != nil {
+			zap.S().Errorf("Error marshaling global JSON: %v", err)
+			return
+		}
+
+		if err := os.WriteFile(outPath, transformed, 0644); err != nil {
+			zap.S().Errorf("Error writing file %s: %v", outPath, err)
+			return
+		}
+		zap.S().Infof("-> Successfully saved all aggregated graphs to %s", outFileName)
+	} else {
+		zap.S().Info("No graphs were generated.")
+	}
+
 	zap.S().Info("Done.")
 }

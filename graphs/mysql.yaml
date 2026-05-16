@@ -1,0 +1,79 @@
+dashboards:
+  - name: MySQL_Instance_Summary
+    group: mysql
+    graphs:
+      - MySQL Connections
+      - MySQL Aborted Connections
+      - MySQL Client Thread Activity
+      - MySQL Temporary Objects
+      - MySQL Select Types
+      - MySQL Questions
+      - Top Command Counters
+      - MySQL Handlers
+      - MySQL Query Cache Activity
+      - MySQL Open Tables
+      - MySQL Sorts
+      - MySQL Table Open Cache Status
+      - MySQL Table Definition Cache
+
+  - name: MySQL_InnoDB_Details
+    group: innodb
+    graphs:
+      - InnoDB Row Reads
+      - InnoDB Row Writes
+      - InnoDB Data I/O
+      - InnoDB FSyncs
+      - InnoDB Pending IO
+      - InnoDB IO Targets Bandwidth
+      - InnoDB Buffer Pool Data
+      - InnoDB Buffer Pool Requests
+      - InnoDB Buffer Pool Page Activity
+      - InnoDB Checkpoint Age
+      - InnoDB Log File Usage Hourly
+      - InnoDB Row Lock Wait Activity
+      - Innodb Row Lock Wait Time
+      - Transaction History
+      - InnoDB AHI Miss Ratio
+      - InnoDB AHI Usage
+      - InnoDB Contention - OS Waits
+      - InnoDB Contention - Spin Rounds
+      - Innodb Flushing by Type
+
+  - name: MySQL_Replication_Summary
+    group: async
+    graphs:
+      - MySQL Replication Lag
+
+  - name: PXC_Galera_Cluster_Summary
+    group: pxc
+    subdir: MySQL
+    graphs:
+      - Percona XtraDB / Galera Cluster Size
+      - Flow Control Paused Time
+      - Flow Control Messages Sent
+      - Average Galera Replication Latency
+
+  - name: PXC_Galera_Node_Summary
+    group: pxc
+    subdir: MySQL
+    graphs:
+      - Galera Flow Control
+      - Available Downtime before SST Required
+      - Galera Writeset Traffic
+
+  - name: MySQL_Group_Replication_Summary
+    group: gr
+    graphs:
+      - Replication Lag
+      - Replication Delay
+      - Transactions in the Queue for Checking
+
+  - name: MySQL_Amazon_Aurora_Details
+    group: aurora
+    graphs:
+      - Amazon Aurora Transaction Commits
+      - Amazon Aurora Load
+      - Aurora Memory Used
+      - Amazon Aurora Statement Latency
+      - Amazon Aurora Special Command Counters
+      - Amazon Aurora Problems

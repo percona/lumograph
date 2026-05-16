@@ -1,0 +1,22 @@
+dashboards:
+  - name: PostgreSQL_Instance_Summary
+    group: pgsql
+    graphs:
+      - PostgreSQL Connections
+      - Active Connections
+      - Tuples
+      - Read Tuple Activity
+      - Tuples Changes by Queries
+      - Transactions
+      - Duration of Transactions
+      - Number of Temp Files
+      - Size of Temp Files
+      - Temp Files Activity
+      - Temp Files Utilization
+      - Conflicts/Deadlocks
+      - Number of Locks
+      - Operations with Blocks
+      - Buffers
+      - Canceled Queries
+      - Cache Hit Ratio
+      - Checkpoint stats

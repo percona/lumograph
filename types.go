@@ -33,7 +33,8 @@ type SeriesConfig struct {
 
 // Config for a single graph image
 type GraphConfig struct {
-	Title  string         `json:"title,omitempty"`
+	Title  string         `json:"title"`
+	Group  string         `json:"group"`
 	Unit   string         `json:"unit,omitempty"`
 	Series []SeriesConfig `json:"series"`
 }

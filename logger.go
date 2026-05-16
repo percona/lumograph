@@ -11,7 +11,9 @@ func initLogger(debug bool) {
 
 	config := zap.NewDevelopmentConfig()
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	
+	config.DisableCaller = !debug
+	config.DisableStacktrace = !debug
+
 	if debug {
 		config.Level = zap.NewAtomicLevelAt(zapcore.DebugLevel)
 	} else {

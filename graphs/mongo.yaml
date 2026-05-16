@@ -1,0 +1,82 @@
+dashboards:
+  - name: MongoDB_Instance_Summary
+    group: mongo
+    graphs:
+      - Command Operations
+      - Latency Detail
+      - Connections
+      - Cursors
+      - Document Operations
+      - Queued Operations
+      - Query Efficiency
+      - Scanned and Moved Objects
+
+  - name: MongoDB_WiredTiger_Details
+    group: wiredtiger
+    graphs:
+      - WiredTiger Transactions
+      - WiredTiger Cache Activity
+      - WiredTiger Block Activity
+      - WiredTiger Sessions
+      - WiredTiger Concurrency Tickets Available
+      - Queued Operations
+      - WiredTiger Checkpoint Time
+      - WiredTiger Cache Eviction
+      - WiredTiger Cache Capacity
+      - WiredTiger Cache Pages
+      - WiredTiger Log Records
+      - Document Changes
+      - Scanned and Moved Objects
+      - Page Faults
+
+  - name: MongoDB_ReplSet_Summary
+    group: replset
+    graphs:
+      - Cluster Name
+      - ReplSet Members
+      - ReplSet Last Election
+      - Avg ReplSet Lag
+      - MongoDB Versions
+      - RepSet States
+      - Replication Lag
+      - Operations
+      - Max Member Ping Time
+      - Max Heartbeat Time
+      - Elections
+      - Oplog Recovery Window
+
+  - name: MongoDB_Cluster_Summary
+    group: sharding
+    graphs:
+      - Sharded DBs
+      - Unsharded DBs
+      - Shards
+      - Chunks
+      - Draining Shards
+      - Sharded Collections
+      - Balancer Enabled
+      - Chunks Balanced
+      - Amount of Collections in Shards
+      - Size of Collections in Shards
+      - QPS of Config Services
+      - QPS of Mongos Service
+      - QPS of Services in Shard
+      - Chunks Balanced
+      - Amount of Chunks in Shards
+      - Dynamic of Chunks
+      - Chunk Split Events
+      - Chunk Move Events
+      - Amount of Indexes in Shards
+      - Dynamic of Indexes
+      - Size of Indexes in Shards
+      - Dynamic of Indexes Size
+      - Amount of Objects in Shards
+      - Dynamic of Objects
+      - Current Connections Per Shard
+      - Total Connections
+      - Current Connections
+      - Available Connections
+      - Cursors Per Shard
+      - Mongos Cursors
+      - Operations Per Shard
+      - Total Mongos Operations
