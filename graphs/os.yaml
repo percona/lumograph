@@ -1,0 +1,12 @@
+dashboards:
+  - name: Node_Summary
+    group: os
+    subdir: OS
+    graphs:
+      - CPU Usage
+      - CPU Saturation and Max Core Usage
+      - Memory Utilization
+      - Swap Activity
+      - I/O Activity
+      - Disk IO Latency
+      - Network Traffic

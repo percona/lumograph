@@ -24,5 +24,6 @@ func initLogger(debug bool) {
 	if err != nil {
 		os.Exit(1)
 	}
+
 	zap.ReplaceGlobals(logger)
 }

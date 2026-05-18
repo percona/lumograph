@@ -3,13 +3,15 @@ package main
 import (
 	_ "embed"
 	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httputil"
 	"os"
 	"strings"
 
 	"go.uber.org/zap"
 	xfont "golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
-
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/font"
 	"gonum.org/v1/plot/vg"
@@ -27,69 +29,71 @@ var embeddedGraphsJSON []byte
 var mediumFont = font.Font{Typeface: "Medium", Size: vg.Points(10)}
 var boldFont = font.Font{Typeface: "Bold", Weight: xfont.WeightBold, Size: vg.Points(10)}
 
-func getConfigFileData(configPath string) ([]byte, error) {
-	if configPath == "" {
-		// Use embedded file
-		return embeddedGraphsJSON, nil
-	}
-
-	// Read from disk
-	return os.ReadFile(configPath)
-}
-
 func main() {
 
 	cmd, lumoConfig, args := parseFlags()
 
 	switch cmd {
-	case "rebuild-graphs":
-		dir := "."
+	case "rebuild-config":
+		dir := "graphs"
 		if len(args) > 0 {
 			dir = args[0]
 		}
+
 		fetchDashboards(dir)
 		os.Exit(0)
 
 	case "list-groups":
-		data, err := getConfigFileData(lumoConfig.ConfigFile)
-		if err != nil {
-			zap.S().Fatalf("error: failed to read config data: %v", err)
-		}
+
 		var graphConfigs []GraphConfig
-		if err := json.Unmarshal(data, &graphConfigs); err != nil {
-			zap.S().Fatalf("error: failed to parse %s: %v", lumoConfig.ConfigFile, err)
+		if err := json.Unmarshal(embeddedGraphsJSON, &graphConfigs); err != nil {
+			zap.S().Fatalf("error: failed to parse embedded configuration: %v", err)
 		}
 
 		knownGroups := GetKnownGroups(graphConfigs)
 
 		zap.S().Info("Available Graph Groups:")
+
 		for g := range knownGroups {
 			zap.S().Infof("  - %s", g)
 		}
+
 		os.Exit(0)
 
-	case "get-graphs":
+	case "list-services":
+
 		if lumoConfig.Endpoint == "" {
 			zap.S().Fatal("error: -endpoint flag is required")
 		}
-		if lumoConfig.Service == "" {
-			zap.S().Fatal("error: -service flag is required")
-		}
+
 		if lumoConfig.Token == "" {
 			zap.S().Fatal("error: -token flag is required")
 		}
+
+		listServices(lumoConfig.Endpoint, lumoConfig.Token, lumoConfig.Debug)
+		os.Exit(0)
+
+	case "get-graphs":
+
+		if lumoConfig.Endpoint == "" {
+			zap.S().Fatal("error: -endpoint flag is required")
+		}
+
+		if lumoConfig.Service == "" {
+			zap.S().Fatal("error: -service flag is required")
+		}
+
+		if lumoConfig.Token == "" {
+			zap.S().Fatal("error: -token flag is required")
+		}
+
 		if lumoConfig.Groups == "" {
 			zap.S().Fatal("error: -groups is required")
 		}
 
 		var graphConfigs []GraphConfig
-
-		data, err := getConfigFileData(lumoConfig.ConfigFile)
-		if err != nil {
-			zap.S().Fatalf("error: failed to read config data: %v", err)
-		}
-		if err := json.Unmarshal(data, &graphConfigs); err != nil {
-			zap.S().Fatalf("error: failed to parse %s: %v", lumoConfig.ConfigFile, err)
+		if err := json.Unmarshal(embeddedGraphsJSON, &graphConfigs); err != nil {
+			zap.S().Fatalf("error: failed to parse embedded configuration: %v", err)
 		}
 
 		if err := validateGraphConfigs(graphConfigs); err != nil {
@@ -125,17 +129,21 @@ func main() {
 		knownGroups := GetKnownGroups(graphConfigs)
 
 		for _, rg := range requestedGroups {
+
 			rg = strings.TrimSpace(rg)
 			if rg == "" {
 				continue
 			}
+
 			if !knownGroups[rg] {
 				zap.S().Fatalf("error: requested group '%s' does not exist in the configuration file", rg)
 			}
+
 			activeGroups[rg] = true
 		}
 
 		for _, graphConfig := range graphConfigs {
+
 			if !activeGroups[graphConfig.Group] {
 				continue
 			}
@@ -148,11 +156,72 @@ func main() {
 			if nameBase == "" {
 				nameBase = "untitled_graph"
 			}
+
 			outputFile := toSnakeCase(nameBase) + ".png"
 
 			zap.S().Infof("Generating graph for title: %s -> %s", graphConfig.Title, outputFile)
+
 			if err := generateGraph(&lumoConfig, &graphConfig, outputFile); err != nil {
 				zap.S().Errorf("error generating graph: %v", err)
+			}
+		}
+	}
+}
+
+// Query PMM to get a list of all services, and display the result
+func listServices(endpoint, token string, debug bool) {
+
+	req, err := http.NewRequest("GET", endpoint+"/v1/management/services", nil)
+	if err != nil {
+		zap.S().Fatalf("error creating request: %v", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	if debug {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			zap.S().Debugf("--- DEBUG: HTTP Request ---\n%s\n---------------------------", dump)
+		}
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		zap.S().Fatalf("error fetching services: %v", err)
+	}
+
+	defer func() { _ = resp.Body.Close() }()
+
+	if debug {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			zap.S().Debugf("--- DEBUG: HTTP Response ---\n%s\n---------------------------", dump)
+		}
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		zap.S().Fatalf("unexpected HTTP status: %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		zap.S().Fatalf("error reading response body: %v", err)
+	}
+
+	var inventory map[string][]struct {
+		ServiceName string `json:"service_name"`
+	}
+
+	if err := json.Unmarshal(body, &inventory); err != nil {
+		zap.S().Fatalf("error parsing inventory JSON: %v", err)
+	}
+
+	zap.S().Info("Available Services:")
+
+	for serviceType, services := range inventory {
+		for _, service := range services {
+			if service.ServiceName != "" {
+				zap.S().Infof("  - %s (%s)", service.ServiceName, serviceType)
 			}
 		}
 	}

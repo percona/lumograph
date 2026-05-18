@@ -66,7 +66,9 @@ func (g HourlyGrid) Plot(c draw.Canvas, plt *plot.Plot) {
 type HourlyTicker struct{}
 
 func (HourlyTicker) Ticks(min, max float64) []plot.Tick {
+
 	var ticks []plot.Tick
+
 	t := time.Unix(int64(min), 0).Local().Truncate(time.Hour)
 	if float64(t.Unix()) < min {
 		t = t.Add(time.Hour)
@@ -78,6 +80,7 @@ func (HourlyTicker) Ticks(min, max float64) []plot.Tick {
 			ticks = append(ticks, plot.Tick{Value: float64(t.Unix()), Label: " "})
 		}
 	}
+
 	return ticks
 }
 
@@ -123,6 +126,7 @@ func (t CustomYTicker) Ticks(min, max float64) []plot.Tick {
 
 		ticks[i].Label = labelStr
 	}
+
 	return ticks
 }
 
@@ -153,14 +157,22 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 
 	base, _ := url.Parse(lumoConfig.Endpoint)
 	base.Path = "/victoriametrics/prometheus/api/v1/query_range"
+
 	var tableRows []TableRow
+
 	globalMaxY := -math.MaxFloat64
 
 	for i, s := range cfg.Series {
 
 		q := base.Query()
+
 		interpolatedExpr := strings.ReplaceAll(s.Expr, "$service_name", lumoConfig.Service)
 		interpolatedExpr = strings.ReplaceAll(interpolatedExpr, "$interval", lumoConfig.Interval)
+
+		if lumoConfig.Node != "" {
+			interpolatedExpr = strings.ReplaceAll(interpolatedExpr, "$node_name", lumoConfig.Node)
+		}
+
 		q.Set("query", interpolatedExpr)
 		q.Set("step", "60s")
 		q.Set("start", fmt.Sprintf("%d", lumoConfig.Start.Unix()))
@@ -172,6 +184,7 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 			zap.S().Errorf("error: creating request for %s: %v", s.Legend, err)
 			continue
 		}
+
 		if lumoConfig.Token != "" {
 			req.Header.Set("Authorization", "Bearer "+lumoConfig.Token)
 		}
@@ -198,12 +211,13 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 
 		if resp.StatusCode != http.StatusOK {
 			zap.S().Errorf("error: unexpected HTTP status for %s: %d", s.Legend, resp.StatusCode)
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			continue
 		}
 
 		body, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
+
 		if err != nil {
 			zap.S().Errorf("error: reading response for %s: %v", s.Legend, err)
 			continue
@@ -223,27 +237,33 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 		}
 
 		for resultIdx, result := range vmResp.Data.Result {
+
 			minVal := math.MaxFloat64
 			maxVal := -math.MaxFloat64
 			sumVal := 0.0
 			countVal := 0.0
 
 			pts := make(plotter.XYs, 0, len(result.Values))
+
 			for _, v := range result.Values {
+
 				if len(v) != 2 {
 					zap.S().Errorf("error: not enough values")
 					continue
 				}
+
 				t, ok := v[0].(float64)
 				if !ok {
 					zap.S().Errorf("error: could not parse timestamp")
 					continue
 				}
+
 				valStr, ok := v[1].(string)
 				if !ok {
 					zap.S().Errorf("error: could not parse string value")
 					continue
 				}
+
 				val, err := strconv.ParseFloat(valStr, 64)
 				if err != nil {
 					zap.S().Errorf("error: could not parse float value")
@@ -253,12 +273,15 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 				if val < minVal {
 					minVal = val
 				}
+
 				if val > maxVal {
 					maxVal = val
 				}
+
 				if val > globalMaxY {
 					globalMaxY = val
 				}
+
 				sumVal += val
 				countVal++
 
@@ -283,17 +306,21 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 				zap.S().Errorf("error: creating line for %s: %v", legendText, err)
 				continue
 			}
+
 			seriesColor := Palette[(i+resultIdx)%len(Palette)]
 			line.Color = seriesColor
 
 			// Create polygon points for filling the area under the line
 			polyPts := make(plotter.XYs, len(pts)+2)
+
 			// Start point at (X[0], 0)
 			polyPts[0] = plotter.XY{X: pts[0].X, Y: 0}
+
 			// Copy data points
 			for j, pt := range pts {
 				polyPts[j+1] = pt
 			}
+
 			// End point at (X[len-1], 0)
 			polyPts[len(polyPts)-1] = plotter.XY{X: pts[len(pts)-1].X, Y: 0}
 
@@ -302,7 +329,7 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 				// Extract RGBA from seriesColor and add alpha transparency
 				r, g, b, _ := seriesColor.RGBA()
 				poly.Color = color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: 32} // ~12.5% opaque
-				poly.LineStyle.Width = 0                                               // No border on the polygon
+				poly.Width = 0                                                         // No border on the polygon
 				p.Add(poly)
 			}
 
@@ -324,11 +351,13 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 	}
 
 	if globalMaxY != -math.MaxFloat64 {
+
 		// Add 10% padding to the max Y value
 		padding := math.Abs(globalMaxY) * 0.10
 		if globalMaxY == 0 {
 			padding = 1.0 // Ensure at least some graph area if all lines are exactly 0
 		}
+
 		p.Y.Max = globalMaxY + padding
 
 		p.Add(HLine{
@@ -401,6 +430,7 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 	}
 
 	for _, row := range tableRows {
+
 		// Draw separator line above the row
 		lineY := y - vg.Points(4)
 		tableCanvas.StrokeLine2(sepStyle, colColor, lineY, tableCanvas.Max.X, lineY)
@@ -424,11 +454,13 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 			tableCanvas.FillText(styleNormal, vg.Point{X: colAvg, Y: y}, formatValue(row.Avg))
 		}
 	}
+
 	f, err := os.Create(output)
 	if err != nil {
 		return fmt.Errorf("creating output file: %w", err)
 	}
-	defer f.Close()
+
+	defer func() { _ = f.Close() }()
 
 	png := vgimg.PngCanvas{Canvas: c}
 	if _, err := png.WriteTo(f); err != nil {

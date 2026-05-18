@@ -37,7 +37,7 @@ The project is currently a single-file Go application (`main.go`) that handles:
 
 ### Configuration
 
-The tool expects a `graphs.json` file in the current working directory containing a JSON array of graph configurations.
+The tool uses an internally embedded `graphs.json` database containing the graph configurations.
 
 ### Running the tool
 

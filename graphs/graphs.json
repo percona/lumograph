@@ -1,5 +1,135 @@
 [
   {
+    "title": "CPU Usage",
+    "group": "os",
+    "series": [
+      {
+        "legend": "{{ mode }}",
+        "expr": "avg by (node_name,mode) (clamp_max(((avg by (mode,node_name) ( (clamp_max(rate(node_cpu_seconds_total{node_name=~\"$node_name\",mode!=\"idle\"}[$interval]),1)) or (clamp_max(irate(node_cpu_seconds_total{node_name=~\"$node_name\",mode!=\"idle\"}[5m]),1)) ))*100 or (avg_over_time(node_cpu_average{node_name=~\"$node_name\", mode=~\"user|system|wait|steal|irq|nice\"}[$interval]) or avg_over_time(node_cpu_average{node_name=~\"$node_name\", mode=~\"user|system|wait|steal|irq|nice\"}[5m]))),100))"
+      },
+      {
+        "legend": "Max Core Utilization",
+        "expr": "clamp_max(max by (node_name) (sum  by (cpu,node_name) ( (clamp_max(rate(node_cpu_seconds_total{node_name=~\"$node_name\",mode!=\"idle\",mode!=\"iowait\"}[$interval]),1)) or (clamp_max(irate(node_cpu_seconds_total{node_name=~\"$node_name\",mode!=\"idle\",mode!=\"iowait\"}[5m]),1)) )),1)"
+      }
+    ]
+  },
+  {
+    "title": "CPU Saturation and Max Core Usage",
+    "group": "os",
+    "series": [
+      {
+        "legend": "Normalized CPU Load",
+        "expr": "avg by (node_name) ((avg_over_time(node_procs_running{node_name=~\"$node_name\"}[$interval])-1) / scalar(count(node_cpu_seconds_total{mode=\"user\", node_name=~\"$node_name\"})) or (avg_over_time(node_procs_running{node_name=~\"$node_name\"}[5m])-1) / scalar(count(node_cpu_seconds_total{mode=\"user\", node_name=~\"$node_name\"})))"
+      },
+      {
+        "legend": "Max CPU Core Utilization",
+        "expr": "clamp_max(max by (node_name) (sum  by (cpu,node_name) ( (clamp_max(rate(node_cpu_seconds_total{node_name=~\"$node_name\",mode!=\"idle\",mode!=\"iowait\"}[$interval]),1)) or (clamp_max(irate(node_cpu_seconds_total{node_name=~\"$node_name\",mode!=\"idle\",mode!=\"iowait\"}[5m]),1)) )),1)"
+      },
+      {
+        "legend": "CPU Credits Usage",
+        "expr": "avg by (node_name) (aws_rds_cpu_credit_usage_average{node_name=~\"$node_name\"})"
+      }
+    ]
+  },
+  {
+    "title": "Memory Utilization",
+    "group": "os",
+    "series": [
+      {
+        "legend": "Free",
+        "expr": "avg by (node_name) (avg_over_time(node_memory_MemFree_bytes{node_name=~\"$node_name\"}[$interval]) or avg_over_time(node_memory_MemFree_bytes{node_name=~\"$node_name\"}[5m]))"
+      },
+      {
+        "legend": "Buffers",
+        "expr": "avg by (node_name) (avg_over_time(node_memory_Buffers_bytes{node_name=~\"$node_name\"}[$interval]) or avg_over_time(node_memory_Buffers_bytes{node_name=~\"$node_name\"}[5m]))"
+      },
+      {
+        "legend": "Used",
+        "expr": "clamp_min(avg by (node_name) (((avg_over_time(node_memory_MemTotal_bytes{node_name=~\"$node_name\"}[$interval]) or avg_over_time(node_memory_MemTotal_bytes{node_name=~\"$node_name\"}[5m])) - ((avg_over_time(node_memory_MemFree_bytes{node_name=~\"$node_name\"}[$interval]) or avg_over_time(node_memory_MemFree_bytes{node_name=~\"$node_name\"}[5m]))+ \n(avg_over_time(node_memory_Buffers_bytes{node_name=~\"$node_name\"}[$interval]) or avg_over_time(node_memory_Buffers_bytes{node_name=~\"$node_name\"}[5m])) + \n(avg_over_time(node_memory_Cached_bytes{node_name=~\"$node_name\"}[$interval]) or avg_over_time(node_memory_Cached_bytes{node_name=~\"$node_name\"}[5m]))))),0)"
+      },
+      {
+        "legend": "Cache",
+        "expr": "avg by (node_name) (avg(avg_over_time(node_memory_Cached_bytes{node_name=~\"$node_name\",job=~\"rds.*|node.*\"}[$interval]) or avg_over_time(node_memory_Cached_bytes{node_name=~\"$node_name\",job=~\"rds.*|node.*\"}[5m])) without (job))"
+      },
+      {
+        "legend": "Total",
+        "expr": "avg by (node_name) (avg_over_time(node_memory_MemTotal_bytes{node_name=~\"$node_name\"}[$interval]) or avg_over_time(node_memory_MemTotal_bytes{node_name=~\"$node_name\"}[5m]))"
+      }
+    ]
+  },
+  {
+    "title": "Swap Activity",
+    "group": "os",
+    "series": [
+      {
+        "legend": "Swap In (Reads)",
+        "expr": "avg by (node_name) (rate(node_vmstat_pswpin{node_name=~\"$node_name\"}[$interval]) * 4096 or irate(node_vmstat_pswpin{node_name=~\"$node_name\"}[5m]) * 4096)"
+      },
+      {
+        "legend": "Swap Out (Writes)",
+        "expr": "avg by (node_name) (rate(node_vmstat_pswpout{node_name=~\"$node_name\"}[$interval]) * 4096 or irate(node_vmstat_pswpout{node_name=~\"$node_name\"}[5m]) * 4096)"
+      },
+      {
+        "legend": "Total",
+        "expr": "avg by (node_name) ((rate(node_vmstat_pswpin{node_name=~\"$node_name\"}[$interval]) * 4096 or irate(node_vmstat_pswpin{node_name=~\"$node_name\"}[5m]) * 4096) + (rate(node_vmstat_pswpout{node_name=~\"$node_name\"}[$interval]) * 4096 or irate(node_vmstat_pswpout{node_name=~\"$node_name\"}[5m]) * 4096))"
+      }
+    ]
+  },
+  {
+    "title": "I/O Activity",
+    "group": "os",
+    "series": [
+      {
+        "legend": "Disk Reads (Page In)",
+        "expr": "avg by (node_name) (rate(node_vmstat_pgpgin{node_name=~\"$node_name\"}[$interval]) * 1024 or irate(node_vmstat_pgpgin{node_name=~\"$node_name\"}[5m]) * 1024 or\n(max_over_time(rdsosmetrics_diskIO_readKbPS{node_name=~\"$node_name\"}[$interval]) or max_over_time(rdsosmetrics_diskIO_readKbPS{node_name=~\"$node_name\"}[5m])) * 1024)"
+      },
+      {
+        "legend": "Disk Writes (Page Out)",
+        "expr": "avg by (node_name) ((rate(node_vmstat_pgpgout{node_name=~\"$node_name\"}[$interval]) * 1024 or irate(node_vmstat_pgpgout{node_name=~\"$node_name\"}[5m]) * 1024) or\n(max_over_time(rdsosmetrics_diskIO_writeKbPS{node_name=~\"$node_name\"}[$interval]) or max_over_time(rdsosmetrics_diskIO_writeKbPS{node_name=~\"$node_name\"}[5m])) * 1024)"
+      },
+      {
+        "legend": "Total",
+        "expr": "avg by (node_name) ((rate(node_vmstat_pgpgin{node_name=~\"$node_name\"}[$interval]) * 1024 or irate(node_vmstat_pgpgin{node_name=~\"$node_name\"}[5m]) * 1024 ) + (rate(node_vmstat_pgpgout{node_name=~\"$node_name\"}[$interval]) * 1024 or irate(node_vmstat_pgpgout{node_name=~\"$node_name\"}[5m]) * 1024) or\n((max_over_time(rdsosmetrics_diskIO_writeKbPS{node_name=~\"$node_name\"}[$interval]) or max_over_time(rdsosmetrics_diskIO_writeKbPS{node_name=~\"$node_name\"}[5m])) +\n(max_over_time(rdsosmetrics_diskIO_readKbPS{node_name=~\"$node_name\"}[$interval]) or max_over_time(rdsosmetrics_diskIO_readKbPS{node_name=~\"$node_name\"}[5m])))* 1024)"
+      }
+    ]
+  },
+  {
+    "title": "Disk IO Latency",
+    "group": "os",
+    "series": [
+      {
+        "legend": "Read Latency",
+        "expr": "avg by (node_name) ((sum by (node_name) (rate(node_disk_read_time_seconds_total{node_name=~\"$node_name\"}[$interval])) / sum by (node_name) (rate(node_disk_reads_completed_total{node_name=~\"$node_name\"}[$interval]) \u003e 0 )) or (sum by (node_name) (irate(node_disk_read_time_seconds_total{node_name=~\"$node_name\"}[5m])) / \nsum by (node_name) (irate(node_disk_reads_completed_total{node_name=~\"$node_name\"}[5m]) \u003e 0 ))\nor avg_over_time(aws_rds_read_latency_average{node_name=~\"$node_name\"}[$interval])/1000 or avg_over_time(aws_rds_read_latency_average{node_name=~\"$node_name\"}[5m])/1000 or\navg_over_time(rdsosmetrics_diskIO_readLatency{node_name=~\"$node_name\"}[$interval])/1000 or avg_over_time(rdsosmetrics_diskIO_readLatency{node_name=~\"$node_name\"}[5m])/1000)"
+      },
+      {
+        "legend": "Write Latency",
+        "expr": "avg by (node_name) ((sum by (node_name) (rate(node_disk_write_time_seconds_total{node_name=~\"$node_name\"}[$interval])) / sum by (node_name) (rate(node_disk_writes_completed_total{node_name=~\"$node_name\"}[$interval]) \u003e 0 )) or (sum by (node_name) (irate(node_disk_write_time_seconds_total{node_name=~\"$node_name\"}[5m])) / \nsum by (node_name) (irate(node_disk_writes_completed_total{node_name=~\"$node_name\"}[5m]) \u003e 0 ))\nor (avg_over_time(aws_rds_write_latency_average{node_name=~\"$node_name\"}[$interval])/1000 or avg_over_time(aws_rds_write_latency_average{node_name=~\"$node_name\"}[5m])/1000) or\n(avg_over_time(rdsosmetrics_diskIO_writeLatency{node_name=~\"$node_name\"}[$interval]) or avg_over_time(rdsosmetrics_diskIO_writeLatency{node_name=~\"$node_name\"}[5m]))/1000)"
+      },
+      {
+        "legend": "Avg Read Latency (1h)",
+        "expr": "avg by (node_name) ((sum by (node_name) (rate(node_disk_read_time_seconds_total{node_name=~\"$node_name\"}[1h])) / sum by (node_name) (rate(node_disk_reads_completed_total{node_name=~\"$node_name\"}[1h]) \u003e 0 ))\nor avg_over_time(aws_rds_read_latency_average{node_name=~\"$node_name\"}[1h])/1000 or avg_over_time(aws_rds_read_latency_average{node_name=~\"$node_name\"}[1h])/1000 or\navg_over_time(rdsosmetrics_diskIO_readLatency{node_name=~\"$node_name\"}[1h])/1000 or avg_over_time(rdsosmetrics_diskIO_readLatency{node_name=~\"$node_name\"}[1h])/1000)"
+      },
+      {
+        "legend": "Avg Write Latency (1h)",
+        "expr": "avg by (node_name) ((sum by (node_name) (rate(node_disk_write_time_seconds_total{node_name=~\"$node_name\"}[1h])) / sum by (node_name) (rate(node_disk_writes_completed_total{node_name=~\"$node_name\"}[1h]) \u003e 0 )) \nor (avg_over_time(aws_rds_write_latency_average{node_name=~\"$node_name\"}[$interval])/1000 or avg_over_time(aws_rds_write_latency_average{node_name=~\"$node_name\"}[1h])/1000) or\n(avg_over_time(rdsosmetrics_diskIO_writeLatency{node_name=~\"$node_name\"}[$interval])/1000 or avg_over_time(rdsosmetrics_diskIO_writeLatency{node_name=~\"$node_name\"}[1h])/1000))"
+      }
+    ]
+  },
+  {
+    "title": "Network Traffic",
+    "group": "os",
+    "series": [
+      {
+        "legend": "Inbound",
+        "expr": "sum by (node_name) (rate(node_network_receive_bytes_total{node_name=~\"$node_name\", device!=\"lo\"}[$interval])) or sum by (node_name) (irate(node_network_receive_bytes_total{node_name=~\"$node_name\", device!=\"lo\"}[5m])) or sum by (node_name) (max_over_time(rdsosmetrics_network_rx{node_name=~\"$node_name\"}[$interval])) or sum by (node_name) (max_over_time(rdsosmetrics_network_rx{node_name=~\"$node_name\"}[5m])) "
+      },
+      {
+        "legend": "Outbound",
+        "expr": "sum by (node_name) (rate(node_network_transmit_bytes_total{node_name=~\"$node_name\", device!=\"lo\"}[$interval])) or sum by (node_name) (irate(node_network_transmit_bytes_total{node_name=~\"$node_name\", device!=\"lo\"}[5m])) or\nsum by (node_name) (max_over_time(rdsosmetrics_network_tx{node_name=~\"$node_name\"}[$interval])) or sum by (node_name) (max_over_time(rdsosmetrics_network_tx{node_name=~\"$node_name\"}[5m]))"
+      }
+    ]
+  },
+  {
     "title": "MySQL Connections",
     "group": "mysql",
     "unit": "short",

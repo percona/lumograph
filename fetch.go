@@ -27,21 +27,38 @@ type GrafanaDashboard struct {
 	} `json:"panels"`
 }
 
-func fetchDashboards(dirPath string) {
+func fetchDashboards(sourcePath string) {
 
-	targetFiles := []string{"mysql.yaml", "pgsql.yaml", "mongo.yaml", "valkey.yaml"}
 	var files []string
 
-	for _, f := range targetFiles {
-		path := filepath.Join(dirPath, f)
-		if _, err := os.Stat(path); err == nil {
-			files = append(files, path)
+	var outDir string
+
+	if sourcePath == "" {
+		sourcePath = "."
+	}
+
+	info, err := os.Stat(sourcePath)
+	if err != nil {
+		zap.S().Fatalf("error: source path not found: %v", err)
+	}
+
+	if info.IsDir() {
+		outDir = sourcePath
+
+		targetFiles := []string{"os.yaml", "mysql.yaml", "pgsql.yaml", "mongo.yaml", "valkey.yaml"}
+		for _, f := range targetFiles {
+			path := filepath.Join(sourcePath, f)
+			if _, err := os.Stat(path); err == nil {
+				files = append(files, path)
+			}
 		}
+	} else {
+		outDir = filepath.Dir(sourcePath)
+		files = []string{sourcePath}
 	}
 
 	if len(files) == 0 {
-		zap.S().Info("None of the targeted yaml files found in ", dirPath)
-		return
+		zap.S().Fatalf("error: no valid yaml source files found at %s", sourcePath)
 	}
 
 	baseUrl := "https://raw.githubusercontent.com/percona/pmm/refs/heads/v3/dashboards/dashboards/"
@@ -49,7 +66,9 @@ func fetchDashboards(dirPath string) {
 	var globalConfigs []GraphConfig
 
 	for _, file := range files {
+
 		zap.S().Infof("Processing %s...", file)
+
 		data, err := os.ReadFile(file)
 		if err != nil {
 			zap.S().Infof("  Error reading file: %v", err)
@@ -104,7 +123,8 @@ func fetchDashboards(dirPath string) {
 				zap.S().Infof("    Error fetching %s: %v", fetchUrl, err)
 				continue
 			}
-			defer resp.Body.Close()
+
+			defer func() { _ = resp.Body.Close() }()
 
 			if resp.StatusCode != http.StatusOK {
 				zap.S().Infof("    HTTP Error %d: Could not download %s from %s", resp.StatusCode, fileName, fetchUrl)
@@ -163,15 +183,15 @@ func fetchDashboards(dirPath string) {
 			}
 
 			globalConfigs = append(globalConfigs, lumoConfigs...)
+
 			zap.S().Infof("    Successfully downloaded and processed %s", fileName)
 		}
-
 	}
 
 	// Save the globally aggregated configs to a single graphs.json file
 	if len(globalConfigs) > 0 {
 		outFileName := "graphs.json"
-		outPath := filepath.Join(dirPath, outFileName)
+		outPath := filepath.Join(outDir, outFileName)
 
 		transformed, err := json.MarshalIndent(globalConfigs, "", "  ")
 		if err != nil {
@@ -183,7 +203,9 @@ func fetchDashboards(dirPath string) {
 			zap.S().Errorf("Error writing file %s: %v", outPath, err)
 			return
 		}
+
 		zap.S().Infof("-> Successfully saved all aggregated graphs to %s", outFileName)
+
 	} else {
 		zap.S().Info("No graphs were generated.")
 	}

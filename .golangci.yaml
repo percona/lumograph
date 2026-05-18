@@ -1,0 +1,24 @@
+version: "2"
+
+linters:
+  enable:
+    - wsl_v5
+  settings:
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: true
+      branch-max-lines: 5
+      case-max-lines: 5
+      cuddle-max-statements: 2
+      disable:
+        - leading-whitespace
+        - trailing-whitespace
+
+#formatters:
+#  enable:
+#    - gci
+#    - gofmt
+#    - gofumpt
+#    - goimports
+#    - golines
+#    - swaggo
