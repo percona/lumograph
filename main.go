@@ -50,6 +50,10 @@ func main() {
 			zap.S().Fatalf("error: failed to parse embedded configuration: %v", err)
 		}
 
+		if err := validateGraphConfigs(graphConfigs); err != nil {
+			zap.S().Fatalf("graph config validation error: %v", err)
+		}
+
 		knownGroups := GetKnownGroups(graphConfigs)
 
 		zap.S().Info("Available Graph Groups:")
@@ -97,7 +101,7 @@ func main() {
 		}
 
 		if err := validateGraphConfigs(graphConfigs); err != nil {
-			zap.S().Fatalf("validation error in %s: %v", lumoConfig.ConfigFile, err)
+			zap.S().Fatalf("graph config validation error: %v", err)
 		}
 
 		ttf, err := opentype.Parse(mediumFontTTF)

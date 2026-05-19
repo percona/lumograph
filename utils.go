@@ -9,6 +9,7 @@ import (
 )
 
 var (
+	ErrEmtptyConfig  = errors.New("graph config is empty")
 	ErrMissingTitle  = errors.New("missing a 'title'")
 	ErrMissingGroup  = errors.New("missing a 'group'")
 	ErrMissingSeries = errors.New("has no series defined")
@@ -70,6 +71,10 @@ func toSnakeCase(s string) string {
 }
 
 func validateGraphConfigs(configs []GraphConfig) error {
+
+	if len(configs) == 0 {
+		return ErrEmtptyConfig
+	}
 
 	for i, cfg := range configs {
 

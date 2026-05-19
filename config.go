@@ -11,16 +11,15 @@ import (
 
 // LumoConfig is the global application configuration derived from CLI flags
 type LumoConfig struct {
-	Endpoint   string
-	Service    string
-	Node       string
-	Groups     string
-	ConfigFile string
-	Interval   string
-	Start      time.Time
-	End        time.Time
-	Token      string
-	Debug      bool
+	Endpoint string
+	Service  string
+	Node     string
+	Groups   string
+	Interval string
+	Start    time.Time
+	End      time.Time
+	Token    string
+	Debug    bool
 }
 
 const (
