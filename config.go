@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// Global application configuration derived from CLI flags
+// LumoConfig is the global application configuration derived from CLI flags
 type LumoConfig struct {
 	Endpoint   string
 	Service    string
@@ -23,7 +23,14 @@ type LumoConfig struct {
 	Debug      bool
 }
 
-const timeFormat = "2006-01-02 15:04:05"
+const (
+	timeFormat = "2006-01-02 15:04:05"
+
+	getGraphsCommand     = "get-graphs"
+	listGroupsCommand    = "list-groups"
+	listServicesCommand  = "list-services"
+	rebuildConfigCommand = "rebuild-config"
+)
 
 func parseFlags() (string, LumoConfig, []string) {
 
@@ -38,125 +45,113 @@ func parseFlags() (string, LumoConfig, []string) {
 
 	var startStr, endStr string
 
-	// Create subcommands
-	getCmd := flag.NewFlagSet("get-graphs", flag.ExitOnError)
-	rebuildCmd := flag.NewFlagSet("rebuild-config", flag.ExitOnError)
-	listCmd := flag.NewFlagSet("list-groups", flag.ExitOnError)
-	listServicesCmd := flag.NewFlagSet("list-services", flag.ExitOnError)
-
-	// Flags for get-graphs
-	getCmd.StringVar(&cfg.Endpoint, "endpoint", "", "PMM URL (required)")
-	getCmd.StringVar(&cfg.Service, "service", "", "PMM Service name (required)")
-	getCmd.StringVar(&cfg.Node, "node", "", "PMM Node name (optional)")
-	getCmd.StringVar(&cfg.Groups, "groups", "", "Comma-separated list of graph groups render (required)")
-	getCmd.StringVar(&cfg.Interval, "interval", "5m", "Interval duration for graphs (e.g., 5m, 1h)")
-	getCmd.StringVar(&startStr, "start", "", "Start time (YYYY-MM-DD HH:MM:SS, defaults to 24h ago)")
-	getCmd.StringVar(&endStr, "end", "", "End time (YYYY-MM-DD HH:MM:SS, defaults to now)")
-	getCmd.StringVar(&cfg.Token, "token", "", "PMM API token (can also use PMM_TOKEN env var)")
-	getCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
-
-	// Flags for list-groups
-	listCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
-
-	// Flags for list-services
-	listServicesCmd.StringVar(&cfg.Endpoint, "endpoint", "", "VictoriaMetrics endpoint URL (required)")
-	listServicesCmd.StringVar(&cfg.Token, "token", "", "Bearer token for VictoriaMetrics auth (can also use PMM_TOKEN env var)")
-	listServicesCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
-
-	// Flags for rebuild-graphs
-	rebuildCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
+	getCmd, rebuildCmd, listCmd, listServicesCmd := setupFlagSets(&cfg, &startStr, &endStr)
 
 	var parsedArgs []string
 
+	var activeCmd *flag.FlagSet
+
 	switch command {
-	case "get-graphs":
-		if err := getCmd.Parse(os.Args[2:]); err != nil {
-			zap.S().Fatalf("error parsing flags: %v", err)
-		}
-
-		parsedArgs = getCmd.Args()
-
-		initLogger(cfg.Debug)
-
-		// Handle Token Logic
-		envToken := os.Getenv("PMM_TOKEN")
-		if cfg.Token != "" && envToken != "" {
-			zap.S().Fatalf("error: both -token flag and PMM_TOKEN environment variable are set. Please provide only one.")
-		}
-
-		if cfg.Token == "" {
-			cfg.Token = envToken
-		}
-
-		// Handle Start Time
-		if startStr == "" {
-			cfg.Start = time.Now().Add(-24 * time.Hour)
-		} else {
-			t, err := time.ParseInLocation(timeFormat, startStr, time.Local)
-			if err != nil {
-				zap.S().Fatalf("error parsing -start time: %v", err)
-			}
-
-			cfg.Start = t
-		}
-
-		// Handle End Time
-		if endStr == "" {
-			cfg.End = time.Now()
-		} else {
-			t, err := time.ParseInLocation(timeFormat, endStr, time.Local)
-			if err != nil {
-				zap.S().Fatalf("error parsing -end time: %v", err)
-			}
-
-			cfg.End = t
-		}
-
-	case "list-groups":
-
-		if err := listCmd.Parse(os.Args[2:]); err != nil {
-			zap.S().Fatalf("error parsing flags: %v", err)
-		}
-
-		parsedArgs = listCmd.Args()
-
-		initLogger(cfg.Debug)
-
-	case "rebuild-config":
-
-		if err := rebuildCmd.Parse(os.Args[2:]); err != nil {
-			zap.S().Fatalf("error parsing flags: %v", err)
-		}
-
-		parsedArgs = rebuildCmd.Args()
-
-		initLogger(cfg.Debug)
-
-	case "list-services":
-
-		if err := listServicesCmd.Parse(os.Args[2:]); err != nil {
-			zap.S().Fatalf("error parsing flags: %v", err)
-		}
-
-		parsedArgs = listServicesCmd.Args()
-
-		initLogger(cfg.Debug)
-
-		envToken := os.Getenv("PMM_TOKEN")
-		if cfg.Token != "" && envToken != "" {
-			zap.S().Fatalf("error: both -token flag and PMM_TOKEN environment variable are set. Please provide only one.")
-		}
-
-		if cfg.Token == "" {
-			cfg.Token = envToken
-		}
-
+	case getGraphsCommand:
+		activeCmd = getCmd
+	case listGroupsCommand:
+		activeCmd = listCmd
+	case rebuildConfigCommand:
+		activeCmd = rebuildCmd
+	case listServicesCommand:
+		activeCmd = listServicesCmd
 	default:
 		printUsage()
 		os.Exit(1)
 	}
 
+	if err := activeCmd.Parse(os.Args[2:]); err != nil {
+		fmt.Fprintf(os.Stderr, "error parsing flags: %v\n", err)
+		os.Exit(1)
+	}
+
+	parsedArgs = activeCmd.Args()
+
+	initLogger(cfg.Debug)
+
+	if command == getGraphsCommand || command == listServicesCommand {
+		cfg.Token = resolveToken(cfg.Token)
+	}
+
+	if command == getGraphsCommand {
+		cfg.Start, cfg.End = resolveTimeRanges(startStr, endStr)
+	}
+
 	return command, cfg, parsedArgs
+}
+
+func setupFlagSets(cfg *LumoConfig, startStr, endStr *string) (*flag.FlagSet, *flag.FlagSet, *flag.FlagSet, *flag.FlagSet) {
+
+	getCmd := flag.NewFlagSet(getGraphsCommand, flag.ExitOnError)
+	rebuildCmd := flag.NewFlagSet(rebuildConfigCommand, flag.ExitOnError)
+	listCmd := flag.NewFlagSet(listGroupsCommand, flag.ExitOnError)
+	listServicesCmd := flag.NewFlagSet(listServicesCommand, flag.ExitOnError)
+
+	getCmd.StringVar(&cfg.Endpoint, "endpoint", "", "PMM URL (required)")
+	getCmd.StringVar(&cfg.Service, "service", "", "PMM Service name (required)")
+	getCmd.StringVar(&cfg.Node, "node", "", "PMM Node name (optional)")
+	getCmd.StringVar(&cfg.Groups, "groups", "", "Comma-separated list of graph groups render (required)")
+	getCmd.StringVar(&cfg.Interval, "interval", "5m", "Interval duration for graphs (e.g., 5m, 1h)")
+	getCmd.StringVar(startStr, "start", "", "Start time (YYYY-MM-DD HH:MM:SS, defaults to 24h ago)")
+	getCmd.StringVar(endStr, "end", "", "End time (YYYY-MM-DD HH:MM:SS, defaults to now)")
+	getCmd.StringVar(&cfg.Token, "token", "", "PMM API token (can also use PMM_TOKEN env var)")
+	getCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
+
+	listCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
+
+	listServicesCmd.StringVar(&cfg.Endpoint, "endpoint", "", "VictoriaMetrics endpoint URL (required)")
+	listServicesCmd.StringVar(&cfg.Token, "token", "", "Bearer token for VictoriaMetrics auth (can also use PMM_TOKEN env var)")
+	listServicesCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
+
+	rebuildCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
+
+	return getCmd, rebuildCmd, listCmd, listServicesCmd
+}
+
+func resolveToken(cliToken string) string {
+
+	envToken := os.Getenv("PMM_TOKEN")
+	if cliToken != "" && envToken != "" {
+		zap.S().Fatalf("error: both -token flag and PMM_TOKEN environment variable are set. Please provide only one.")
+	}
+
+	if cliToken == "" {
+		return envToken
+	}
+
+	return cliToken
+}
+
+func resolveTimeRanges(startStr, endStr string) (time.Time, time.Time) {
+
+	var start, end time.Time
+
+	var err error
+
+	if startStr == "" {
+		start = time.Now().Add(-24 * time.Hour)
+	} else {
+		start, err = time.ParseInLocation(timeFormat, startStr, time.Local)
+		if err != nil {
+			zap.S().Fatalf("error parsing -start time: %v", err)
+		}
+	}
+
+	if endStr == "" {
+		end = time.Now()
+	} else {
+		end, err = time.ParseInLocation(timeFormat, endStr, time.Local)
+		if err != nil {
+			zap.S().Fatalf("error parsing -end time: %v", err)
+		}
+	}
+
+	return start, end
 }
 
 func printUsage() {

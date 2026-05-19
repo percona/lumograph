@@ -2,8 +2,53 @@ version: "2"
 
 linters:
   enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - canonicalheader
+    - containedctx
+    - contextcheck
+    - copyloopvar
+    - cyclop
+    - decorder
+    - dogsled
+    - dupl
+    - dupword
+    - durationcheck
+    - embeddedstructfieldcheck
+    - err113
+    - errcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - exhaustive
+#    - exhaustruct
+    - exptostd
+    - fatcontext
+    - forbidigo
+    - forcetypeassert
+    - funcorder
+    - funlen
+    - ginkgolinter
+    - gocheckcompilerdirectives
+#    - gochecknoglobals
+    - gochecknoinits
+    - gochecksumtype
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godoclint
+    - godox
+    - gomoddirectives
+    - goprintffuncname
+#    - gosec
+    - govet
+    - grouper
     - wsl_v5
   settings:
+    cyclop:
+      max-complexity: 15
     wsl_v5:
       allow-first-in-block: true
       allow-whole-block: true
@@ -14,11 +59,13 @@ linters:
         - leading-whitespace
         - trailing-whitespace
 
-#formatters:
-#  enable:
-#    - gci
-#    - gofmt
+formatters:
+  enable:
+    - gci
+    - gofmt
 #    - gofumpt
-#    - goimports
-#    - golines
-#    - swaggo
+    - goimports
+    - golines
+  settings:
+    golines:
+      max-len: 200

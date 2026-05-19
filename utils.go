@@ -1,51 +1,63 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"regexp"
 	"strings"
 )
 
+var (
+	ErrMissingTitle  = errors.New("missing a 'title'")
+	ErrMissingGroup  = errors.New("missing a 'group'")
+	ErrMissingSeries = errors.New("has no series defined")
+	ErrMissingLegend = errors.New("has an empty 'legend'")
+	ErrMissingExpr   = errors.New("has an empty 'expr'")
+)
+
 func formatValue(val float64) string {
 
 	absVal := math.Abs(val)
 
+	// 4 decimals if under 100
 	if absVal < 100 {
 		return fmt.Sprintf("%.4f", val)
-	} else if absVal < 1000 {
-		return fmt.Sprintf("%.2f", val)
-	} else {
-		str := fmt.Sprintf("%.0f", val)
-
-		// Values greater than 9999 should show 0 digits of precision and use ',' separator
-		if absVal <= 9999 {
-			return str
-		}
-
-		isNegative := false
-		if strings.HasPrefix(str, "-") {
-			isNegative = true
-			str = str[1:]
-		}
-
-		var result []byte
-
-		for i := len(str) - 1; i >= 0; i-- {
-
-			if (len(str)-1-i)%3 == 0 && i != len(str)-1 {
-				result = append([]byte{','}, result...)
-			}
-
-			result = append([]byte{str[i]}, result...)
-		}
-
-		if isNegative {
-			result = append([]byte{'-'}, result...)
-		}
-
-		return string(result)
 	}
+
+	// 2 decimals if under 1000
+	if absVal < 1000 {
+		return fmt.Sprintf("%.2f", val)
+	}
+
+	// Values greater than 9999 should show 0 digits of precision and use ',' separator
+	str := fmt.Sprintf("%.0f", val)
+	if absVal <= 9999 {
+		return str
+	}
+
+	isNegative := false
+	if strings.HasPrefix(str, "-") {
+		isNegative = true
+		str = str[1:]
+	}
+
+	var result []byte
+
+	for i := len(str) - 1; i >= 0; i-- {
+
+		if (len(str)-1-i)%3 == 0 && i != len(str)-1 {
+			result = append([]byte{','}, result...)
+		}
+
+		result = append([]byte{str[i]}, result...)
+	}
+
+	if isNegative {
+		result = append([]byte{'-'}, result...)
+	}
+
+	return string(result)
 }
 
 func toSnakeCase(s string) string {
@@ -62,25 +74,25 @@ func validateGraphConfigs(configs []GraphConfig) error {
 	for i, cfg := range configs {
 
 		if cfg.Title == "" {
-			return fmt.Errorf("graph configuration at index %d is missing a 'title'", i)
+			return fmt.Errorf("graph configuration at index %d %w", i, ErrMissingTitle)
 		}
 
 		if cfg.Group == "" {
-			return fmt.Errorf("graph configuration '%s' (index %d) is missing a 'group'", cfg.Title, i)
+			return fmt.Errorf("graph configuration '%s' (index %d) %w", cfg.Title, i, ErrMissingGroup)
 		}
 
 		if len(cfg.Series) == 0 {
-			return fmt.Errorf("graph configuration '%s' (index %d) has no series defined", cfg.Title, i)
+			return fmt.Errorf("graph configuration '%s' (index %d) %w", cfg.Title, i, ErrMissingSeries)
 		}
 
 		for j, series := range cfg.Series {
 
 			if series.Legend == "" {
-				return fmt.Errorf("graph configuration '%s' (index %d) has an empty 'legend' in series index %d", cfg.Title, i, j)
+				return fmt.Errorf("graph configuration '%s' (index %d) series index %d %w", cfg.Title, i, j, ErrMissingLegend)
 			}
 
 			if series.Expr == "" {
-				return fmt.Errorf("graph configuration '%s' (index %d) has an empty 'expr' in series index %d", cfg.Title, i, j)
+				return fmt.Errorf("graph configuration '%s' (index %d) series index %d %w", cfg.Title, i, j, ErrMissingExpr)
 			}
 		}
 	}

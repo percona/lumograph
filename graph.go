@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"image/color"
 	"io"
 	"math"
 	"net/http"
@@ -13,8 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"image/color"
 
 	"go.uber.org/zap"
 	"gonum.org/v1/plot"
@@ -27,7 +26,7 @@ import (
 
 const legendPadding = 8
 
-// Color palette from Grafana's "classic"
+// Palette is a slice of Color{}s derived from Grafana's "classic" palette
 var Palette = []color.Color{
 	color.RGBA{R: 0x73, G: 0xBF, B: 0x69, A: 255}, // rgb(115, 191, 105)
 	color.RGBA{R: 0xF2, G: 0xCC, B: 0x0C, A: 255}, // rgb(242, 204, 12)
@@ -47,6 +46,7 @@ type HourlyGrid struct {
 }
 
 func (g HourlyGrid) Plot(c draw.Canvas, plt *plot.Plot) {
+
 	trX, _ := plt.Transforms(&c)
 	minX, maxX := plt.X.Min, plt.X.Max
 
@@ -101,8 +101,8 @@ type CustomYTicker struct {
 }
 
 func (t CustomYTicker) Ticks(min, max float64) []plot.Tick {
-	ticks := plot.DefaultTicks{}.Ticks(min, max)
 
+	ticks := plot.DefaultTicks{}.Ticks(min, max)
 	for i := range ticks {
 		if ticks[i].Label == "" {
 			continue // Skip minor ticks
@@ -112,11 +112,12 @@ func (t CustomYTicker) Ticks(min, max float64) []plot.Tick {
 		absVal := math.Abs(val)
 
 		var labelStr string
-		if absVal >= 1000000 {
+		switch {
+		case absVal >= 1000000:
 			labelStr = fmt.Sprintf("%.1fM", val/1000000)
-		} else if absVal >= 1000 {
+		case absVal >= 1000:
 			labelStr = fmt.Sprintf("%.1fK", val/1000)
-		} else {
+		default:
 			labelStr = fmt.Sprintf("%.0f", val)
 		}
 
@@ -131,6 +132,7 @@ func (t CustomYTicker) Ticks(min, max float64) []plot.Tick {
 }
 
 func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) error {
+
 	p := plot.New()
 	p.Title.Text = cfg.Title
 	p.Title.Padding = 20
