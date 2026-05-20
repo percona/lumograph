@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
@@ -163,8 +165,15 @@ func fetchAndTransformDashboard(dash YamlDashboard) []GraphConfig {
 
 func downloadGrafanaDashboard(url, fileName string) (*GrafanaDashboard, error) {
 
-	// #nosec
-	resp, err := http.Get(url)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, http.NoBody)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrCreateRequest, err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("%w %s: %w", ErrFetchingURL, url, err)
 	}

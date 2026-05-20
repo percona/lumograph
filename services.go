@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httputil"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -18,7 +20,10 @@ type PMMService struct {
 
 func getPmmServices(endpoint, token string, debug bool) ([]PMMService, error) {
 
-	req, err := http.NewRequest("GET", endpoint+"/v1/management/services", http.NoBody)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", endpoint+"/v1/management/services", http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrCreateRequest, err)
 	}
