@@ -1,20 +1,10 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"regexp"
 	"strings"
-)
-
-var (
-	ErrEmtptyConfig  = errors.New("graph config is empty")
-	ErrMissingTitle  = errors.New("missing a 'title'")
-	ErrMissingGroup  = errors.New("missing a 'group'")
-	ErrMissingSeries = errors.New("has no series defined")
-	ErrMissingLegend = errors.New("has an empty 'legend'")
-	ErrMissingExpr   = errors.New("has an empty 'expr'")
 )
 
 func formatValue(val float64) string {

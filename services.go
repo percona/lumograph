@@ -2,23 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httputil"
 
 	"go.uber.org/zap"
-)
-
-var (
-	ErrCreateRequest    = errors.New("error creating request")
-	ErrFetchServices    = errors.New("error fetching services")
-	ErrUnexpectedStatus = errors.New("unexpected HTTP status")
-	ErrReadResponse     = errors.New("error reading response body")
-	ErrParseJSON        = errors.New("error parsing JSON")
-	ErrServiceNotFound  = errors.New("service not found")
-	ErrNodeNameEmpty    = errors.New("node_name is empty")
 )
 
 type PMMService struct {
@@ -71,7 +60,7 @@ func getPmmServices(endpoint, token string, debug bool) ([]PMMService, error) {
 	}
 
 	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrParseJSON, err)
+		return nil, fmt.Errorf("%w: %w", ErrParsingJSON, err)
 	}
 
 	return response.Services, nil

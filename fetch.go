@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,20 +11,6 @@ import (
 
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
-)
-
-var (
-	ErrSourceNotFound = errors.New("source path not found")
-	ErrNoYamlFiles    = errors.New("no valid yaml source files found")
-	ErrReadingFile    = errors.New("error reading file")
-	ErrParsingYaml    = errors.New("error parsing YAML")
-	ErrSubdirParse    = errors.New("error parsing subdir from name")
-	ErrFetchingURL    = errors.New("error fetching URL")
-	ErrHTTPDownload   = errors.New("could not download")
-	ErrReadingResp    = errors.New("error reading response")
-	ErrParsingJSON    = errors.New("error parsing dashboard JSON")
-	ErrMarshalJSON    = errors.New("error marshaling global JSON")
-	ErrWritingFile    = errors.New("error writing file")
 )
 
 const pmmBaseURL = "https://raw.githubusercontent.com/percona/pmm/refs/heads/v3/dashboards/dashboards/"
