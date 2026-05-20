@@ -107,8 +107,6 @@ func setupFlagSets(cfg *LumoConfig, startStr, endStr *string) (*flag.FlagSet, *f
 	listServicesCmd.StringVar(&cfg.Token, "token", "", "Bearer token for VictoriaMetrics auth (can also use PMM_TOKEN env var)")
 	listServicesCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
 
-	rebuildCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
-
 	return getCmd, rebuildCmd, listCmd, listServicesCmd
 }
 
@@ -157,7 +155,6 @@ func printUsage() {
 	fmt.Fprintf(os.Stderr, "Usage of %s:\n\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "Commands:\n")
 	fmt.Fprintf(os.Stderr, "  get-graphs\t\tGenerates charts by querying a PMM endpoint.\n")
-	fmt.Fprintf(os.Stderr, "  rebuild-config [file]\tRebuilds the graph configs from PMM source using a local YAML file.\n")
 	fmt.Fprintf(os.Stderr, "  list-groups\t\tLists all available graph groups.\n")
 	fmt.Fprintf(os.Stderr, "  list-services\t\tLists all available services from the PMM inventory API.\n\n")
 	fmt.Fprintf(os.Stderr, "Run '%s <command> -h' to see flags for a specific command.\n", os.Args[0])

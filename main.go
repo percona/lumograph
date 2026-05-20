@@ -1,5 +1,7 @@
 package main
 
+//go:generate go run graphs/rebuild-config.go graphs
+
 import (
 	_ "embed"
 	"encoding/json"
@@ -26,11 +28,9 @@ var mediumFont = font.Font{Typeface: "Medium", Size: vg.Points(10)}
 var boldFont = font.Font{Typeface: "Bold", Weight: xfont.WeightBold, Size: vg.Points(10)}
 
 func main() {
-	cmd, cfg, args := parseFlags()
+	cmd, cfg, _ := parseFlags()
 
 	switch cmd {
-	case "rebuild-config":
-		executeRebuildConfig(args)
 	case "list-groups":
 		executeListGroups()
 	case "list-services":
@@ -38,16 +38,6 @@ func main() {
 	case "get-graphs":
 		executeGetGraphs(&cfg)
 	}
-}
-
-func executeRebuildConfig(args []string) {
-
-	dir := "graphs"
-	if len(args) > 0 {
-		dir = args[0]
-	}
-
-	fetchDashboards(dir)
 }
 
 func executeListGroups() {
