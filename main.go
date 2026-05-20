@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httputil"
@@ -95,6 +96,20 @@ func main() {
 			zap.S().Fatal("error: -groups is required")
 		}
 
+		// Auto-discover node name if not provided
+		if lumoConfig.Node == "" {
+
+			zap.S().Infof("Attempting to auto-discover node name for service '%s'...", lumoConfig.Service)
+
+			nodeName, err := discoverNodeName(lumoConfig.Endpoint, lumoConfig.Token, lumoConfig.Service)
+			if err != nil {
+				zap.S().Warnf("Node discovery failed: %v. Continuing without $node_name substitution.", err)
+			} else {
+				zap.S().Infof("Discovered node: %s", nodeName)
+				lumoConfig.Node = nodeName
+			}
+		}
+
 		var graphConfigs []GraphConfig
 		if err := json.Unmarshal(embeddedGraphsJSON, &graphConfigs); err != nil {
 			zap.S().Fatalf("error: failed to parse embedded configuration: %v", err)
@@ -172,14 +187,17 @@ func main() {
 	}
 }
 
-// Query PMM to get a list of all services, and display the result
-func listServices(endpoint, token string, debug bool) {
+type PMMService struct {
+	ServiceName string `json:"service_name"`
+	ServiceType string `json:"service_type"`
+	NodeName    string `json:"node_name"`
+}
 
+func getPmmServices(endpoint, token string, debug bool) ([]PMMService, error) {
 	req, err := http.NewRequest("GET", endpoint+"/v1/management/services", nil)
 	if err != nil {
-		zap.S().Fatalf("error creating request: %v", err)
+		return nil, fmt.Errorf("error creating request: %w", err)
 	}
-
 	req.Header.Set("Authorization", "Bearer "+token)
 
 	if debug {
@@ -191,9 +209,8 @@ func listServices(endpoint, token string, debug bool) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		zap.S().Fatalf("error fetching services: %v", err)
+		return nil, fmt.Errorf("error fetching services: %w", err)
 	}
-
 	defer func() { _ = resp.Body.Close() }()
 
 	if debug {
@@ -204,29 +221,64 @@ func listServices(endpoint, token string, debug bool) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		zap.S().Fatalf("unexpected HTTP status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected HTTP status: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		zap.S().Fatalf("error reading response body: %v", err)
+		return nil, fmt.Errorf("error reading response body: %w", err)
 	}
 
-	var inventory map[string][]struct {
-		ServiceName string `json:"service_name"`
+	var response struct {
+		Services []PMMService `json:"services"`
 	}
 
-	if err := json.Unmarshal(body, &inventory); err != nil {
-		zap.S().Fatalf("error parsing inventory JSON: %v", err)
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, fmt.Errorf("error parsing JSON: %w", err)
+	}
+
+	return response.Services, nil
+}
+
+// Query PMM to get a list of all services, and display the result
+func listServices(endpoint, token string, debug bool) {
+
+	services, err := getPmmServices(endpoint, token, debug)
+	if err != nil {
+		zap.S().Fatalf("Failed to retrieve services: %v", err)
 	}
 
 	zap.S().Info("Available Services:")
 
-	for serviceType, services := range inventory {
-		for _, service := range services {
-			if service.ServiceName != "" {
-				zap.S().Infof("  - %s (%s)", service.ServiceName, serviceType)
-			}
+	for _, service := range services {
+		if service.ServiceName != "" {
+			zap.S().Infof("  - %s (%s)", service.ServiceName, serviceTypeToString(service.ServiceType))
 		}
 	}
+}
+
+func serviceTypeToString(sType string) string {
+	if sType == "" {
+		return "unknown"
+	}
+	return sType
+}
+
+func discoverNodeName(endpoint, token, serviceName string) (string, error) {
+
+	services, err := getPmmServices(endpoint, token, false)
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch services for auto-discovery: %w", err)
+	}
+
+	for _, s := range services {
+		if s.ServiceName == serviceName {
+			if s.NodeName == "" {
+				return "", fmt.Errorf("service '%s' found, but node_name is empty", serviceName)
+			}
+			return s.NodeName, nil
+		}
+	}
+
+	return "", fmt.Errorf("service '%s' not found", serviceName)
 }
