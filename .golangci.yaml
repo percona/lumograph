@@ -42,13 +42,18 @@ linters:
     - godox
     - gomoddirectives
     - goprintffuncname
-#    - gosec
+    - gosec
     - govet
     - grouper
+
     - wsl_v5
   settings:
     cyclop:
       max-complexity: 15
+    gocritic:
+      enable-all: true
+      disabled-checks:
+        - unnamedResult
     wsl_v5:
       allow-first-in-block: true
       allow-whole-block: true

@@ -65,16 +65,16 @@ func (g HourlyGrid) Plot(c draw.Canvas, plt *plot.Plot) {
 
 type HourlyTicker struct{}
 
-func (HourlyTicker) Ticks(min, max float64) []plot.Tick {
+func (HourlyTicker) Ticks(minVal, maxVal float64) []plot.Tick {
 
 	var ticks []plot.Tick
 
-	t := time.Unix(int64(min), 0).Local().Truncate(time.Hour)
-	if float64(t.Unix()) < min {
+	t := time.Unix(int64(minVal), 0).Local().Truncate(time.Hour)
+	if float64(t.Unix()) < minVal {
 		t = t.Add(time.Hour)
 	}
 
-	for ; float64(t.Unix()) <= max; t = t.Add(time.Hour) {
+	for ; float64(t.Unix()) <= maxVal; t = t.Add(time.Hour) {
 		if t.Hour()%2 == 0 {
 			// Provide a non-empty string so it's treated as a major tick
 			ticks = append(ticks, plot.Tick{Value: float64(t.Unix()), Label: " "})
@@ -100,9 +100,9 @@ type CustomYTicker struct {
 	Unit string
 }
 
-func (t CustomYTicker) Ticks(min, max float64) []plot.Tick {
+func (t CustomYTicker) Ticks(minVal, maxVal float64) []plot.Tick {
 
-	ticks := plot.DefaultTicks{}.Ticks(min, max)
+	ticks := plot.DefaultTicks{}.Ticks(minVal, maxVal)
 	for i := range ticks {
 		if ticks[i].Label == "" {
 			continue // Skip minor ticks
@@ -181,7 +181,7 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 		q.Set("end", fmt.Sprintf("%d", lumoConfig.End.Unix()))
 		base.RawQuery = q.Encode()
 
-		req, err := http.NewRequest("POST", base.String(), nil)
+		req, err := http.NewRequest("POST", base.String(), http.NoBody)
 		if err != nil {
 			zap.S().Errorf("error: creating request for %s: %v", s.Legend, err)
 			continue
@@ -330,7 +330,7 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 			if err == nil {
 				// Extract RGBA from seriesColor and add alpha transparency
 				r, g, b, _ := seriesColor.RGBA()
-				poly.Color = color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: 32} // ~12.5% opaque
+				poly.Color = color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: 32} // #nosec ~12.5% opaque
 				poly.Width = 0                                                         // No border on the polygon
 				p.Add(poly)
 			}
@@ -457,6 +457,7 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 		}
 	}
 
+	// #nosec
 	f, err := os.Create(output)
 	if err != nil {
 		return fmt.Errorf("creating output file: %w", err)

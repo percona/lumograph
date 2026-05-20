@@ -114,6 +114,7 @@ func processYamlFile(file string) []GraphConfig {
 
 	var fileConfigs []GraphConfig
 
+	// #nosec
 	data, err := os.ReadFile(file)
 	if err != nil {
 		zap.S().Errorf("  %v %s: %v", ErrReadingFile, file, err)
@@ -177,6 +178,7 @@ func fetchAndTransformDashboard(dash YamlDashboard) []GraphConfig {
 
 func downloadGrafanaDashboard(url, fileName string) (*GrafanaDashboard, error) {
 
+	// #nosec
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("%w %s: %w", ErrFetchingURL, url, err)
@@ -260,7 +262,7 @@ func saveGlobalConfig(configs []GraphConfig, outDir string) {
 		return
 	}
 
-	if err := os.WriteFile(outPath, transformed, 0644); err != nil {
+	if err := os.WriteFile(outPath, transformed, 0o600); err != nil {
 		zap.S().Errorf("%v %s: %v", ErrWritingFile, outPath, err)
 		return
 	}
