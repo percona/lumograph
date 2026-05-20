@@ -22,16 +22,13 @@ linters:
     - errname
     - errorlint
     - exhaustive
-#    - exhaustruct
     - exptostd
     - fatcontext
     - forbidigo
     - forcetypeassert
     - funcorder
-    - funlen
     - ginkgolinter
     - gocheckcompilerdirectives
-#    - gochecknoglobals
     - gochecknoinits
     - gochecksumtype
     - gocognit
@@ -45,7 +42,28 @@ linters:
     - gosec
     - govet
     - grouper
-
+    - iface
+    - importas
+    - inamedparam
+    - ineffassign
+    - interfacebloat
+    - intrange
+    - iotamixing
+    - ireturn
+    - loggercheck
+    - makezero
+    - mirror
+    - modernize
+    - musttag
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnesserr
+    - nilnil
+    - nlreturn
+    - noctx
+    - nonamedreturns
+    - nosprintfhostport
     - wsl_v5
   settings:
     cyclop:
@@ -53,7 +71,13 @@ linters:
     gocritic:
       enable-all: true
       disabled-checks:
+        - tooManyResultsChecker
         - unnamedResult
+    modernize:
+      disable:
+        - any
+    nlreturn:
+      block-size: 4
     wsl_v5:
       allow-first-in-block: true
       allow-whole-block: true
