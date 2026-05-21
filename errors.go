@@ -14,13 +14,12 @@ var (
 
 // API & Networking Errors
 var (
-	ErrCreateRequest    = errors.New("creating request")
-	ErrExecRequest      = errors.New("executing request")
-	ErrUnexpectedHTTP   = errors.New("unexpected status")
-	ErrUnexpectedStatus = errors.New("unexpected HTTP status")
-	ErrReadResponse     = errors.New("reading response")
-	ErrAPIStatus        = errors.New("API status")
-	ErrFetchServices    = errors.New("error fetching services")
+	ErrCreateRequest        = errors.New("creating request")
+	ErrExecRequest          = errors.New("executing request")
+	ErrUnexpectedHTTPStatus = errors.New("unexpected HTTP status")
+	ErrReadResponse         = errors.New("reading response")
+	ErrAPIStatus            = errors.New("API status")
+	ErrFetchServices        = errors.New("error fetching services")
 )
 
 // PMM Auto-Discovery Errors

@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -31,18 +33,23 @@ type GraphConfig struct {
 
 const pmmBaseURL = "https://raw.githubusercontent.com/percona/pmm/refs/heads/v3/dashboards/dashboards/"
 
+var ErrUnexpectedHTTPStatus = errors.New("unexpected HTTP status")
+
 type GrafanaDashboard struct {
-	Panels []struct {
-		Type  string `json:"type"`
-		Title string `json:"title"`
-		Yaxes []struct {
-			Format string `json:"format"`
-		} `json:"yaxes"`
-		Targets []struct {
-			Expr         string `json:"expr"`
-			LegendFormat string `json:"legendFormat"`
-		} `json:"targets"`
-	} `json:"panels"`
+	Panels []GrafanaPanel `json:"panels"`
+}
+
+type GrafanaPanel struct {
+	Type  string `json:"type"`
+	Title string `json:"title"`
+	Yaxes []struct {
+		Format string `json:"format"`
+	} `json:"yaxes"`
+	Targets []struct {
+		Expr         string `json:"expr"`
+		LegendFormat string `json:"legendFormat"`
+	} `json:"targets"`
+	Panels []GrafanaPanel `json:"panels,omitempty"`
 }
 
 type YamlConfig struct {
@@ -79,6 +86,7 @@ func main() {
 	}
 
 	files, outDir := resolveSourceFiles(sourcePath)
+
 	var globalConfigs []GraphConfig
 
 	for _, file := range files {
@@ -104,10 +112,13 @@ func resolveSourceFiles(sourcePath string) ([]string, string) {
 	}
 
 	var files []string
+
 	var outDir string
 
 	if info.IsDir() {
+
 		outDir = sourcePath
+
 		targetFiles := []string{"os.yaml", "mysql.yaml", "pgsql.yaml", "mongo.yaml", "valkey.yaml"}
 		for _, f := range targetFiles {
 			path := filepath.Join(sourcePath, f)
@@ -131,7 +142,7 @@ func processYamlFile(file string) []GraphConfig {
 
 	var fileConfigs []GraphConfig
 
-	data, err := os.ReadFile(file)
+	data, err := os.ReadFile(file) // #nosec
 	if err != nil {
 		zap.S().Errorf("  error reading file %s: %v", file, err)
 		return nil
@@ -185,14 +196,18 @@ func fetchAndTransformDashboard(dash YamlDashboard) []GraphConfig {
 	}
 
 	configs := mapGrafanaToLumo(dash, grafanaDash)
-	zap.S().Infof("    Successfully downloaded and processed %s", fileName)
+	if len(configs) == 0 {
+		zap.S().Fatalf("No graph configs were processed for %s", dash.Name)
+	}
+
+	zap.S().Infof("  Successfully downloaded and processed %s", fileName)
 
 	return configs
 }
 
 func downloadGrafanaDashboard(url, fileName string) (*GrafanaDashboard, error) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, http.NoBody)
@@ -204,10 +219,11 @@ func downloadGrafanaDashboard(url, fileName string) (*GrafanaDashboard, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error fetching %s: %w", url, err)
 	}
+
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("HTTP Error %d: could not download %s from %s", resp.StatusCode, fileName, url)
+		return nil, fmt.Errorf("%w: %d", ErrUnexpectedHTTPStatus, resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -226,39 +242,57 @@ func downloadGrafanaDashboard(url, fileName string) (*GrafanaDashboard, error) {
 func mapGrafanaToLumo(dash YamlDashboard, grafanaDash *GrafanaDashboard) []GraphConfig {
 
 	var lumoConfigs []GraphConfig
+
 	wantedGraphs := make(map[string]bool)
 	for _, g := range dash.Graphs {
 		wantedGraphs[g] = true
 	}
 
-	for _, p := range grafanaDash.Panels {
-		if p.Type != "graph" && p.Type != "timeseries" {
-			continue
-		}
-		if !wantedGraphs[p.Title] {
-			continue
-		}
+	var processPanels func(panels []GrafanaPanel)
 
-		unit := ""
-		if len(p.Yaxes) > 0 {
-			unit = p.Yaxes[0].Format
-		}
+	processPanels = func(panels []GrafanaPanel) {
 
-		series := make([]SeriesConfig, 0, len(p.Targets))
-		for _, t := range p.Targets {
-			series = append(series, SeriesConfig{
-				Legend: t.LegendFormat,
-				Expr:   t.Expr,
+		for _, p := range panels {
+
+			// Recurse into this grafana "row" which contains graphs
+			if p.Type == "row" {
+				processPanels(p.Panels)
+				continue
+			}
+
+			if p.Type != "graph" && p.Type != "timeseries" {
+				continue
+			}
+
+			if !wantedGraphs[p.Title] {
+				continue
+			}
+
+			unit := ""
+			if len(p.Yaxes) > 0 {
+				unit = p.Yaxes[0].Format
+			}
+
+			series := make([]SeriesConfig, 0, len(p.Targets))
+			for _, t := range p.Targets {
+				series = append(series, SeriesConfig{
+					Legend: t.LegendFormat,
+					Expr:   t.Expr,
+				})
+			}
+
+			lumoConfigs = append(lumoConfigs, GraphConfig{
+				Title:  p.Title,
+				Group:  dash.Group,
+				Unit:   unit,
+				Series: series,
 			})
-		}
 
-		lumoConfigs = append(lumoConfigs, GraphConfig{
-			Title:  p.Title,
-			Group:  dash.Group,
-			Unit:   unit,
-			Series: series,
-		})
+			zap.S().Infof("    Added %s graph", p.Title)
+		}
 	}
+
+	processPanels(grafanaDash.Panels)
 
 	return lumoConfigs
 }
@@ -269,21 +303,60 @@ func saveGlobalConfig(configs []GraphConfig, outDir string) {
 		zap.S().Fatal("No graph configs were generated.")
 	}
 
-	outFileName := "graphs.json"
-	outPath := filepath.Join(outDir, outFileName)
+	grouped := make(map[string][]GraphConfig)
+	for _, c := range configs {
+		grouped[c.Group] = append(grouped[c.Group], c)
+	}
 
-	transformed, err := json.MarshalIndent(configs, "", "  ")
-	if err != nil {
-		zap.S().Errorf("error marshaling JSON: %v", err)
+	var sb strings.Builder
+	sb.WriteString("// Code generated by rebuild-config.go. DO NOT EDIT.\n\n")
+	sb.WriteString("package main\n\n")
+	sb.WriteString("var LumoGraphs = map[string][]GraphConfig{\n")
+
+	var keys []string
+	for k := range grouped {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	for _, k := range keys {
+
+		fmt.Fprintf(&sb, "\t%q: {\n", k)
+
+		for _, c := range grouped[k] {
+
+			fmt.Fprintf(&sb, "\t\t{\n")
+			fmt.Fprintf(&sb, "\t\t\tTitle: %q,\n", c.Title)
+			fmt.Fprintf(&sb, "\t\t\tGroup: %q,\n", c.Group)
+			fmt.Fprintf(&sb, "\t\t\tUnit:  %q,\n", c.Unit)
+			fmt.Fprintf(&sb, "\t\t\tSeries: []SeriesConfig{\n")
+
+			for _, s := range c.Series {
+				fmt.Fprintf(&sb, "\t\t\t\t{\n")
+				fmt.Fprintf(&sb, "\t\t\t\t\tLegend: %q,\n", s.Legend)
+				fmt.Fprintf(&sb, "\t\t\t\t\tExpr:   %q,\n", s.Expr)
+				fmt.Fprintf(&sb, "\t\t\t\t},\n")
+			}
+
+			fmt.Fprintf(&sb, "\t\t\t},\n")
+			fmt.Fprintf(&sb, "\t\t},\n")
+		}
+
+		sb.WriteString("\t},\n")
+	}
+
+	sb.WriteString("}\n")
+
+	outPath := "graphs.go"
+
+	// #nosec
+	if err := os.WriteFile(outPath, []byte(sb.String()), 0o644); err != nil {
+		zap.S().Errorf("error writing %s: %v", outPath, err)
 		return
 	}
 
-	if err := os.WriteFile(outPath, transformed, 0o600); err != nil {
-		zap.S().Errorf("error writing file %s: %v", outPath, err)
-		return
-	}
-
-	zap.S().Infof("-> Successfully saved graph configs to %s", outFileName)
+	zap.S().Infof("-> Successfully generated %s", outPath)
 }
 
 func toSnakeCase(s string) string {

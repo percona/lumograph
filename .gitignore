@@ -1,4 +1,5 @@
 lumograph
+graphs.go
 *.png
 *.py
 *.patch

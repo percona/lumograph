@@ -4,7 +4,6 @@ package main
 
 import (
 	_ "embed"
-	"encoding/json"
 	"strings"
 
 	"go.uber.org/zap"
@@ -20,9 +19,6 @@ var mediumFontTTF []byte
 
 //go:embed resources/fonts/Inter_18pt-Bold.ttf
 var boldFontTTF []byte
-
-//go:embed graphs/graphs.json
-var embeddedGraphsJSON []byte
 
 var mediumFont = font.Font{Typeface: "Medium", Size: vg.Points(10)}
 var boldFont = font.Font{Typeface: "Bold", Weight: xfont.WeightBold, Size: vg.Points(10)}
@@ -42,11 +38,9 @@ func main() {
 
 func executeListGroups() {
 
-	knownGroups := GetKnownGroups(loadEmbeddedConfig())
-
 	zap.S().Info("Available Graph Groups:")
 
-	for g := range knownGroups {
+	for g := range LumoGraphs {
 		zap.S().Infof("  - %s", g)
 	}
 }
@@ -82,48 +76,42 @@ func executeGetGraphs(cfg *LumoConfig) {
 		}
 	}
 
-	graphConfigs := loadEmbeddedConfig()
-
 	initFonts()
 
-	activeGroups := make(map[string]bool)
-	requestedGroups := strings.Split(cfg.Groups, ",")
-	knownGroups := GetKnownGroups(graphConfigs)
-
-	for _, rg := range requestedGroups {
+	for rg := range strings.SplitSeq(cfg.Groups, ",") {
 
 		rg = strings.TrimSpace(rg)
 		if rg == "" {
 			continue
 		}
 
-		if !knownGroups[rg] {
-			zap.S().Fatalf("error: requested group '%s' does not exist in the configuration file", rg)
+		graphConfigs, exists := LumoGraphs[rg]
+		if !exists {
+			zap.S().Fatalf("error: requested group '%s' does not exist in the predefined configurations", rg)
 		}
 
-		activeGroups[rg] = true
-	}
-
-	for _, graphConfig := range graphConfigs {
-
-		if !activeGroups[graphConfig.Group] {
-			continue
+		if err := validateGraphConfigs(graphConfigs); err != nil {
+			zap.S().Fatalf("validation error in group '%s': %v", rg, err)
 		}
 
-		if len(graphConfig.Series) == 0 {
-			zap.S().Fatalf("error: graph '%s': no series defined", graphConfig.Title)
-		}
+		for _, graphConfig := range graphConfigs {
 
-		nameBase := graphConfig.Title
-		if nameBase == "" {
-			nameBase = "untitled_graph"
-		}
+			if len(graphConfig.Series) == 0 {
+				zap.S().Fatalf("error: graph '%s': no series defined", graphConfig.Title)
+			}
 
-		outputFile := toSnakeCase(nameBase) + ".png"
-		zap.S().Infof("Generating graph for title: %s -> %s", graphConfig.Title, outputFile)
+			nameBase := graphConfig.Title
+			if nameBase == "" {
+				nameBase = "untitled_graph"
+			}
 
-		if err := generateGraph(cfg, &graphConfig, outputFile); err != nil {
-			zap.S().Errorf("error generating graph: %v", err)
+			outputFile := toSnakeCase(nameBase) + ".png"
+
+			zap.S().Infof("Generating graph for title: %s -> %s", graphConfig.Title, outputFile)
+
+			if err := generateGraph(cfg, &graphConfig, outputFile); err != nil {
+				zap.S().Errorf("error generating graph: %v", err)
+			}
 		}
 	}
 }
@@ -145,20 +133,6 @@ func validateGetGraphsFlags(cfg *LumoConfig) {
 	if cfg.Groups == "" {
 		zap.S().Fatal("error: -groups is required")
 	}
-}
-
-func loadEmbeddedConfig() []GraphConfig {
-
-	var graphConfigs []GraphConfig
-	if err := json.Unmarshal(embeddedGraphsJSON, &graphConfigs); err != nil {
-		zap.S().Fatalf("error: failed to parse embedded configuration: %v", err)
-	}
-
-	if err := validateGraphConfigs(graphConfigs); err != nil {
-		zap.S().Fatalf("graph config validation error: %v", err)
-	}
-
-	return graphConfigs
 }
 
 func initFonts() {

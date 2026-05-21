@@ -42,7 +42,7 @@ dashboards:
   - name: MySQL_Replication_Summary
     group: async
     graphs:
-      - MySQL Replication Lag
+      - MySQL replication lag
 
   - name: PXC_Galera_Cluster_Summary
     group: pxc

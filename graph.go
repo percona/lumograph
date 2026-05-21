@@ -185,7 +185,7 @@ func fetchSeries(lumoConfig *LumoConfig, expr, legend string) (*VMResponse, erro
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w %d", ErrUnexpectedHTTP, resp.StatusCode)
+		return nil, fmt.Errorf("%w: %d", ErrUnexpectedHTTPStatus, resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)

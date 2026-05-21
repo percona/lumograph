@@ -52,7 +52,7 @@ func getPmmServices(endpoint, token string, debug bool) ([]PMMService, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d", ErrUnexpectedStatus, resp.StatusCode)
+		return nil, fmt.Errorf("%w: %d", ErrUnexpectedHTTPStatus, resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
