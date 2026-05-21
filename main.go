@@ -1,6 +1,6 @@
 package main
 
-//go:generate go run graphs/rebuild-config.go graphs
+//go:generate go run rebuild-config.go
 
 import (
 	_ "embed"

@@ -74,26 +74,6 @@ This command outputs a list of the various graph group tags available for render
 
 ---
 
-### `rebuild-config`
-*Fetches and rebuilds the internal JSON configuration from local YAML files.*
-
-The various graphs, and graph groups that Lumograph fetches are managed through standard YAML files in the `graphs/` directory.
-This command reads those YAML files, downloads the raw Grafana PMM dashboard JSON definitions, and transforms the data to match Lumograph's config.
-The final config file is embedded within the Lumograph binary.
-
-*NOTE:* This command is only used in the development process, and only required when one of the YAML definitions changes. If you wish to add, or change the graphs, edit the YAML file, rebuild-config, then recompile lumograph.
-
-**Usage:**
-```bash
-# Rebuild the standard suite by pointing to a directory
-./lumograph rebuild-config graphs/
-
-# Rebuild lumograph after rebuilding the config
-go build -o lumograph .
-```
-
----
-
 ## Development / Contributing
 
 [golangci-lint](https://golangci-lint.run/) is used to enforce certain code styles, and to perform additional lint checks.
@@ -101,10 +81,21 @@ go build -o lumograph .
 Clone the repo, install the required mods, and build.
 
 ```bash
+-- Get mods
 $ go mod tidy
-$ go fmt && go vet && golangci-lint run && go build -o lumograph .
 
--- Fetch config, and rebuild
-$ ./lumograph rebuild-config
-$ go build -o lumograph .
+-- Generate graph configs
+$ go generate
+
+-- Build lumograph
+$ go fmt && go vet && golangci-lint run && go build -o lumograph .
+```
+
+### Adding additional graphs
+
+The various graphs, and graph groups that Lumograph fetches are managed through standard YAML files in the `resources/graphs/` directory.
+Modify the YAML file by adding the graph name to one of the existing lists. You may need to view the JSON source in PMM to find the graph title.
+Open a pull request with the new graph titles added.
+
+During the build process, the `go generate` command reads those YAML files, downloads the raw Grafana PMM dashboard JSON definitions, and transforms the data into `lumographs.go` native structs.
 ```

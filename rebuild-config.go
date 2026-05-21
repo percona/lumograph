@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -19,6 +21,16 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Base URL for downloading grafana dashboard definitions for PMM
+const pmmBaseURL = "https://raw.githubusercontent.com/percona/pmm/refs/heads/v3/dashboards/dashboards/"
+
+var (
+	ErrUnexpectedHTTPStatus = errors.New("unexpected HTTP status")
+
+	// Path to graph yaml
+	graphsPath = "resources/graphs"
+)
+
 type SeriesConfig struct {
 	Legend string `json:"legend"`
 	Expr   string `json:"expr"`
@@ -30,10 +42,6 @@ type GraphConfig struct {
 	Unit   string         `json:"unit,omitempty"`
 	Series []SeriesConfig `json:"series"`
 }
-
-const pmmBaseURL = "https://raw.githubusercontent.com/percona/pmm/refs/heads/v3/dashboards/dashboards/"
-
-var ErrUnexpectedHTTPStatus = errors.New("unexpected HTTP status")
 
 type GrafanaDashboard struct {
 	Panels []GrafanaPanel `json:"panels"`
@@ -66,81 +74,51 @@ type YamlDashboard struct {
 func main() {
 
 	// Logger
-	config := zap.NewDevelopmentConfig()
-	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	config.DisableCaller = true
-	config.DisableStacktrace = true
+	initLogger()
 
-	config.Level = zap.NewAtomicLevelAt(zapcore.InfoLevel)
-
-	logger, err := config.Build()
-	if err != nil {
-		os.Exit(1)
-	}
-
-	zap.ReplaceGlobals(logger)
-
-	sourcePath := "graphs"
-	if len(os.Args) > 1 {
-		sourcePath = os.Args[1]
-	}
-
-	files, outDir := resolveSourceFiles(sourcePath)
+	// Get path to graphs yaml files
+	files := resolveSourceFiles()
 
 	var globalConfigs []GraphConfig
 
+	// Process each yaml file
 	for _, file := range files {
 		zap.S().Infof("Processing %s...", file)
 		configs := processYamlFile(file)
 		globalConfigs = append(globalConfigs, configs...)
 	}
 
-	saveGlobalConfig(globalConfigs, outDir)
+	saveGraphConfigs(globalConfigs)
 
 	zap.S().Info("Generation Done.")
 }
 
-func resolveSourceFiles(sourcePath string) ([]string, string) {
+func resolveSourceFiles() []string {
 
-	if sourcePath == "" {
-		sourcePath = "."
-	}
-
-	info, err := os.Stat(sourcePath)
+	// Check the path to the graphs yaml exists
+	_, err := os.Stat(graphsPath)
 	if err != nil {
-		zap.S().Fatalf("source path not found at %s: %v", sourcePath, err)
+		zap.S().Fatalf("path to graphs not found at %s: %v", graphsPath, err)
 	}
 
 	var files []string
 
-	var outDir string
-
-	if info.IsDir() {
-
-		outDir = sourcePath
-
-		targetFiles := []string{"os.yaml", "mysql.yaml", "pgsql.yaml", "mongo.yaml", "valkey.yaml"}
-		for _, f := range targetFiles {
-			path := filepath.Join(sourcePath, f)
-			if _, err := os.Stat(path); err == nil {
-				files = append(files, path)
-			}
+	targetFiles := []string{"os.yaml", "mysql.yaml", "pgsql.yaml", "mongo.yaml", "valkey.yaml"}
+	for _, f := range targetFiles {
+		path := filepath.Join(graphsPath, f)
+		if _, err := os.Stat(path); err == nil {
+			files = append(files, path)
 		}
-	} else {
-		outDir = filepath.Dir(sourcePath)
-		files = []string{sourcePath}
 	}
 
 	if len(files) == 0 {
-		zap.S().Fatalf("no valid yaml source files found at %s", sourcePath)
+		zap.S().Fatalf("no valid yaml files found at %s", graphsPath)
 	}
 
-	return files, outDir
+	return files
 }
 
 func processYamlFile(file string) []GraphConfig {
-
-	var fileConfigs []GraphConfig
 
 	data, err := os.ReadFile(file) // #nosec
 	if err != nil {
@@ -153,6 +131,8 @@ func processYamlFile(file string) []GraphConfig {
 		zap.S().Errorf("  error parsing YAML: %v", err)
 		return nil
 	}
+
+	var fileConfigs []GraphConfig
 
 	for _, dash := range config.Dashboards {
 		if dash.Name == "" {
@@ -171,6 +151,7 @@ func processYamlFile(file string) []GraphConfig {
 
 func fetchAndTransformDashboard(dash YamlDashboard) []GraphConfig {
 
+	// If the raw github path is different from the dashboard name
 	subdir := dash.Subdir
 	if subdir == "" {
 		parts := strings.Split(dash.Name, "_")
@@ -184,12 +165,11 @@ func fetchAndTransformDashboard(dash YamlDashboard) []GraphConfig {
 		return nil
 	}
 
-	fileName := toSnakeCase(dash.Name) + ".json"
 	fetchUrl := pmmBaseURL + subdir + "/" + dash.Name + ".json"
 
-	zap.S().Infof("  Fetching: %s -> %s", dash.Name, fileName)
+	zap.S().Infof("  Fetching: %s", dash.Name)
 
-	grafanaDash, err := downloadGrafanaDashboard(fetchUrl, fileName)
+	grafanaDash, err := downloadGrafanaDashboard(fetchUrl)
 	if err != nil {
 		zap.S().Errorf("    %v", err)
 		return nil
@@ -200,12 +180,12 @@ func fetchAndTransformDashboard(dash YamlDashboard) []GraphConfig {
 		zap.S().Fatalf("No graph configs were processed for %s", dash.Name)
 	}
 
-	zap.S().Infof("  Successfully downloaded and processed %s", fileName)
+	zap.S().Infof("  Successfully downloaded and processed %s", dash.Name)
 
 	return configs
 }
 
-func downloadGrafanaDashboard(url, fileName string) (*GrafanaDashboard, error) {
+func downloadGrafanaDashboard(url string) (*GrafanaDashboard, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
@@ -243,13 +223,16 @@ func mapGrafanaToLumo(dash YamlDashboard, grafanaDash *GrafanaDashboard) []Graph
 
 	var lumoConfigs []GraphConfig
 
+	// A O(1) lookup map of the graphs we want in our config
 	wantedGraphs := make(map[string]bool)
 	for _, g := range dash.Graphs {
 		wantedGraphs[g] = true
 	}
 
+	// Variable function definition
 	var processPanels func(panels []GrafanaPanel)
 
+	// Define function to process 'panels' from grafana JSON
 	processPanels = func(panels []GrafanaPanel) {
 
 		for _, p := range panels {
@@ -260,10 +243,7 @@ func mapGrafanaToLumo(dash YamlDashboard, grafanaDash *GrafanaDashboard) []Graph
 				continue
 			}
 
-			if p.Type != "graph" && p.Type != "timeseries" {
-				continue
-			}
-
+			// If we don't want this graph, skip and go to next
 			if !wantedGraphs[p.Title] {
 				continue
 			}
@@ -273,6 +253,7 @@ func mapGrafanaToLumo(dash YamlDashboard, grafanaDash *GrafanaDashboard) []Graph
 				unit = p.Yaxes[0].Format
 			}
 
+			// Extract each series PromQL expression
 			series := make([]SeriesConfig, 0, len(p.Targets))
 			for _, t := range p.Targets {
 				series = append(series, SeriesConfig{
@@ -281,6 +262,7 @@ func mapGrafanaToLumo(dash YamlDashboard, grafanaDash *GrafanaDashboard) []Graph
 				})
 			}
 
+			// Add to our global config
 			lumoConfigs = append(lumoConfigs, GraphConfig{
 				Title:  p.Title,
 				Group:  dash.Group,
@@ -297,12 +279,15 @@ func mapGrafanaToLumo(dash YamlDashboard, grafanaDash *GrafanaDashboard) []Graph
 	return lumoConfigs
 }
 
-func saveGlobalConfig(configs []GraphConfig, outDir string) {
+// saveGraphConfigs writes out graphs.go, containing the native struct definitions
+// for all the graphs that LumoGraph can create
+func saveGraphConfigs(configs []GraphConfig) {
 
 	if len(configs) == 0 {
 		zap.S().Fatal("No graph configs were generated.")
 	}
 
+	// "Groupify" the graphs
 	grouped := make(map[string][]GraphConfig)
 	for _, c := range configs {
 		grouped[c.Group] = append(grouped[c.Group], c)
@@ -318,8 +303,10 @@ func saveGlobalConfig(configs []GraphConfig, outDir string) {
 		keys = append(keys, k)
 	}
 
+	// Sort by the group names
 	sort.Strings(keys)
 
+	// Loop over group names and write out graph definitions
 	for _, k := range keys {
 
 		fmt.Fprintf(&sb, "\t%q: {\n", k)
@@ -348,7 +335,7 @@ func saveGlobalConfig(configs []GraphConfig, outDir string) {
 
 	sb.WriteString("}\n")
 
-	outPath := "graphs.go"
+	outPath := "lumographs.go"
 
 	// #nosec
 	if err := os.WriteFile(outPath, []byte(sb.String()), 0o644); err != nil {
@@ -357,6 +344,23 @@ func saveGlobalConfig(configs []GraphConfig, outDir string) {
 	}
 
 	zap.S().Infof("-> Successfully generated %s", outPath)
+}
+
+func initLogger() {
+
+	config := zap.NewDevelopmentConfig()
+	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	config.DisableCaller = true
+	config.DisableStacktrace = true
+
+	config.Level = zap.NewAtomicLevelAt(zapcore.InfoLevel)
+
+	logger, err := config.Build()
+	if err != nil {
+		os.Exit(1)
+	}
+
+	zap.ReplaceGlobals(logger)
 }
 
 func toSnakeCase(s string) string {
