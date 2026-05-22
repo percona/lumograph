@@ -256,9 +256,13 @@ func mapGrafanaToLumo(dash YamlDashboard, grafanaDash *GrafanaDashboard) []Graph
 			// Extract each series PromQL expression
 			series := make([]SeriesConfig, 0, len(p.Targets))
 			for _, t := range p.Targets {
+
+				cleanExpr := strings.ReplaceAll(t.Expr, "\n", " ")
+				cleanExpr = strings.ReplaceAll(cleanExpr, "\r", "")
+
 				series = append(series, SeriesConfig{
 					Legend: t.LegendFormat,
-					Expr:   t.Expr,
+					Expr:   cleanExpr,
 				})
 			}
 
