@@ -4,6 +4,8 @@ package main
 
 import (
 	_ "embed"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"go.uber.org/zap"
@@ -84,6 +86,14 @@ func executeGetGraphs(cfg *LumoConfig) {
 
 	initFonts()
 
+	if cfg.OutDir == "" {
+		cfg.OutDir = cfg.Service
+	}
+
+	if err := os.MkdirAll(cfg.OutDir, 0755); err != nil {
+		zap.S().Fatalf("error creating output directory '%s': %v", cfg.OutDir, err)
+	}
+
 	for rg := range strings.SplitSeq(cfg.Groups, ",") {
 
 		rg = strings.TrimSpace(rg)
@@ -111,7 +121,8 @@ func executeGetGraphs(cfg *LumoConfig) {
 				nameBase = "untitled_graph"
 			}
 
-			outputFile := toSnakeCase(nameBase) + ".png"
+			fileName := toSnakeCase(nameBase) + ".png"
+			outputFile := filepath.Join(cfg.OutDir, fileName)
 
 			zap.S().Infof("Generating graph for title: %s -> %s", graphConfig.Title, outputFile)
 
