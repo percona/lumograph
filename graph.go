@@ -46,9 +46,9 @@ type HourlyGrid struct {
 	Width vg.Length
 }
 
-func (g HourlyGrid) Plot(c draw.Canvas, plt *plot.Plot) {
+func (g HourlyGrid) Plot(canvas draw.Canvas, plt *plot.Plot) {
 
-	trX, _ := plt.Transforms(&c)
+	trX, _ := plt.Transforms(&canvas)
 	minX, maxX := plt.X.Min, plt.X.Max
 
 	t := time.Unix(int64(minX), 0).Local().Truncate(time.Hour)
@@ -59,7 +59,7 @@ func (g HourlyGrid) Plot(c draw.Canvas, plt *plot.Plot) {
 	for ; float64(t.Unix()) <= maxX; t = t.Add(time.Hour) {
 		if t.Hour()%2 == 0 {
 			x := trX(float64(t.Unix()))
-			c.StrokeLine2(draw.LineStyle{Color: g.Color, Width: g.Width}, x, c.Min.Y, x, c.Max.Y)
+			canvas.StrokeLine2(draw.LineStyle{Color: g.Color, Width: g.Width}, x, canvas.Min.Y, x, canvas.Max.Y)
 		}
 	}
 }
@@ -134,9 +134,6 @@ func (t CustomYTicker) Ticks(minVal, maxVal float64) []plot.Tick {
 
 func fetchSeries(lumoConfig *LumoConfig, expr, legend string) (*VMResponse, error) {
 
-	base, _ := url.Parse(lumoConfig.Endpoint)
-	base.Path = "/victoriametrics/prometheus/api/v1/query_range"
-
 	interpolatedExpr := strings.ReplaceAll(expr, "$service_name", lumoConfig.Service)
 	interpolatedExpr = strings.ReplaceAll(interpolatedExpr, "$interval", lumoConfig.Interval)
 
@@ -144,17 +141,21 @@ func fetchSeries(lumoConfig *LumoConfig, expr, legend string) (*VMResponse, erro
 		interpolatedExpr = strings.ReplaceAll(interpolatedExpr, "$node_name", lumoConfig.Node)
 	}
 
+	base, _ := url.Parse(lumoConfig.Endpoint)
+	base.Path = "/victoriametrics/prometheus/api/v1/query_range"
+
 	q := base.Query()
 	q.Set("query", interpolatedExpr)
 	q.Set("step", lumoConfig.Interval)
-	q.Set("start", fmt.Sprintf("%d", lumoConfig.Start.Unix()))
-	q.Set("end", fmt.Sprintf("%d", lumoConfig.End.Unix()))
+	q.Set("start", strconv.FormatInt(lumoConfig.Start.Unix(), 10))
+	q.Set("end", strconv.FormatInt(lumoConfig.End.Unix(), 10))
+
 	base.RawQuery = q.Encode()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, "POST", base.String(), http.NoBody)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, base.String(), http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrCreateRequest, err)
 	}
@@ -327,6 +328,7 @@ func drawLegendTable(tableCanvas draw.Canvas, rows []TableRow) {
 func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) error {
 
 	p := plot.New()
+
 	p.Title.Text = cfg.Title
 	p.Title.Padding = 20
 	p.X.Tick.Marker = plot.TimeTicks{
@@ -394,7 +396,9 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 	}
 
 	if globalMaxY != -math.MaxFloat64 {
+
 		padding := math.Max(math.Abs(globalMaxY)*0.10, 1.0)
+
 		p.Y.Max = globalMaxY + padding
 		p.Add(HLine{Y: p.Y.Max, Color: color.Gray{Y: 220}, Width: vg.Points(0.5)})
 	}

@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
+//nolint:tagliatelle // JSON is returned by Grafana
 type PMMService struct {
 	ServiceName string `json:"service_name"`
 	ServiceType string `json:"service_type"`
@@ -23,7 +24,7 @@ func getPmmServices(endpoint, token string, debug bool) ([]PMMService, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, "GET", endpoint+"/v1/management/services", http.NoBody)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint+"/v1/management/services", http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrCreateRequest, err)
 	}

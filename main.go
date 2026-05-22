@@ -72,6 +72,7 @@ func executeGetGraphs(cfg *LumoConfig) {
 			zap.S().Warnf("Node discovery failed: %v. Continuing without $node_name substitution.", err)
 		} else {
 			zap.S().Infof("Discovered node: %s", nodeName)
+
 			cfg.Node = nodeName
 		}
 	}

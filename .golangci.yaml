@@ -62,9 +62,27 @@ linters:
     - nilnil
     - nlreturn
     - noctx
+    - nolintlint
     - nonamedreturns
     - nosprintfhostport
+    - perfsprint
+    - prealloc
+    - predeclared
+    - reassign
+    - recvcheck
+    - sloglint
+    - staticcheck
+    - tagalign
+    - tagliatelle
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - wastedassign
+    - wrapcheck
     - wsl_v5
+  disable:
+    - whitespace
   settings:
     cyclop:
       max-complexity: 15
@@ -78,13 +96,18 @@ linters:
         - any
     nlreturn:
       block-size: 4
+    whitespace:
+      multi-func: true
+      multi-if: true
     wsl_v5:
       allow-first-in-block: true
       allow-whole-block: true
       branch-max-lines: 5
       case-max-lines: 5
       cuddle-max-statements: 2
+      default: all
       disable:
+        - assign-exclusive
         - leading-whitespace
         - trailing-whitespace
 
