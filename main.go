@@ -1,6 +1,6 @@
 package main
 
-//go:generate go run rebuild-config.go
+//go:generate go run rebuild-config.go resources/graphs
 
 import (
 	_ "embed"
@@ -20,18 +20,23 @@ var mediumFontTTF []byte
 //go:embed resources/fonts/Inter_18pt-Bold.ttf
 var boldFontTTF []byte
 
+var Version = "dev"
+
 var mediumFont = font.Font{Typeface: "Medium", Size: vg.Points(10)}
 var boldFont = font.Font{Typeface: "Bold", Weight: xfont.WeightBold, Size: vg.Points(10)}
 
 func main() {
+
 	cmd, cfg, _ := parseFlags()
 
+	zap.S().Infof("--- Lumograph %s ---", Version)
+
 	switch cmd {
-	case "list-groups":
+	case listGroupsCommand:
 		executeListGroups()
-	case "list-services":
+	case listServicesCommand:
 		executeListServices(&cfg)
-	case "get-graphs":
+	case getGraphsCommand:
 		executeGetGraphs(&cfg)
 	}
 }

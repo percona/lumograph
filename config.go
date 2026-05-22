@@ -28,7 +28,6 @@ const (
 	getGraphsCommand     = "get-graphs"
 	listGroupsCommand    = "list-groups"
 	listServicesCommand  = "list-services"
-	rebuildConfigCommand = "rebuild-config"
 )
 
 func parseFlags() (string, LumoConfig, []string) {
@@ -44,7 +43,7 @@ func parseFlags() (string, LumoConfig, []string) {
 
 	var startStr, endStr string
 
-	getCmd, rebuildCmd, listCmd, listServicesCmd := setupFlagSets(&cfg, &startStr, &endStr)
+	getCmd, listCmd, listServicesCmd := setupFlagSets(&cfg, &startStr, &endStr)
 
 	var parsedArgs []string
 
@@ -55,8 +54,6 @@ func parseFlags() (string, LumoConfig, []string) {
 		activeCmd = getCmd
 	case listGroupsCommand:
 		activeCmd = listCmd
-	case rebuildConfigCommand:
-		activeCmd = rebuildCmd
 	case listServicesCommand:
 		activeCmd = listServicesCmd
 	default:
@@ -84,10 +81,9 @@ func parseFlags() (string, LumoConfig, []string) {
 	return command, cfg, parsedArgs
 }
 
-func setupFlagSets(cfg *LumoConfig, startStr, endStr *string) (*flag.FlagSet, *flag.FlagSet, *flag.FlagSet, *flag.FlagSet) {
+func setupFlagSets(cfg *LumoConfig, startStr, endStr *string) (*flag.FlagSet, *flag.FlagSet, *flag.FlagSet) {
 
 	getCmd := flag.NewFlagSet(getGraphsCommand, flag.ExitOnError)
-	rebuildCmd := flag.NewFlagSet(rebuildConfigCommand, flag.ExitOnError)
 	listCmd := flag.NewFlagSet(listGroupsCommand, flag.ExitOnError)
 	listServicesCmd := flag.NewFlagSet(listServicesCommand, flag.ExitOnError)
 
@@ -107,7 +103,7 @@ func setupFlagSets(cfg *LumoConfig, startStr, endStr *string) (*flag.FlagSet, *f
 	listServicesCmd.StringVar(&cfg.Token, "token", "", "Bearer token for VictoriaMetrics auth (can also use PMM_TOKEN env var)")
 	listServicesCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
 
-	return getCmd, rebuildCmd, listCmd, listServicesCmd
+	return getCmd, listCmd, listServicesCmd
 }
 
 func resolveToken(cliToken string) string {
@@ -152,6 +148,7 @@ func resolveTimeRanges(startStr, endStr string) (time.Time, time.Time) {
 }
 
 func printUsage() {
+	fmt.Fprintf(os.Stderr, "--- Lumograph %s ---\n", Version)
 	fmt.Fprintf(os.Stderr, "Usage of %s:\n\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "Commands:\n")
 	fmt.Fprintf(os.Stderr, "  get-graphs\t\tGenerates charts by querying a PMM endpoint.\n")
