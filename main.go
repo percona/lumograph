@@ -136,19 +136,19 @@ func executeGetGraphs(cfg *LumoConfig) {
 func validateGetGraphsFlags(cfg *LumoConfig) {
 
 	if cfg.Endpoint == "" {
-		zap.S().Fatal("error: -endpoint flag is required")
+		zap.S().Fatal("error: -endpoint flag is required. The base URI of the target PMM server.")
 	}
 
 	if cfg.Service == "" {
-		zap.S().Fatal("error: -service flag is required")
+		zap.S().Fatal("error: -service flag is required. Use 'list-services' to query PMM")
 	}
 
 	if cfg.Token == "" {
-		zap.S().Fatal("error: -token flag is required")
+		zap.S().Fatal("error: -token flag is required. (Can also set PMM_TOKEN env)")
 	}
 
 	if cfg.Groups == "" {
-		zap.S().Fatal("error: -groups is required")
+		zap.S().Fatal("error: -groups list is required. Use 'list-groups' to view known groups.")
 	}
 }
 
