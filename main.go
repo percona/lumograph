@@ -90,7 +90,7 @@ func executeGetGraphs(cfg *LumoConfig) {
 		cfg.OutDir = cfg.Service
 	}
 
-	if err := os.MkdirAll(cfg.OutDir, 0755); err != nil {
+	if err := os.MkdirAll(cfg.OutDir, 0o750); err != nil {
 		zap.S().Fatalf("error creating output directory '%s': %v", cfg.OutDir, err)
 	}
 
