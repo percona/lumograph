@@ -76,7 +76,7 @@ func executeGetGraphs(cfg *LumoConfig) {
 
 		nodeName, err := discoverNodeName(cfg.Endpoint, cfg.Token, cfg.Service)
 		if err != nil {
-			zap.S().Warnf("Node discovery failed: %v. Continuing without $node_name substitution.", err)
+			zap.S().Fatalf("Node discovery failed: %v. Use the -node flag to supply the correct node name for this service.", err)
 		} else {
 			zap.S().Infof("Discovered node: %s", nodeName)
 
@@ -116,7 +116,24 @@ func executeGetGraphs(cfg *LumoConfig) {
 				zap.S().Fatalf("error: graph '%s': no series defined", graphConfig.Title)
 			}
 
+			// Interpolate title variables
+			interpolatedTitle := strings.ReplaceAll(graphConfig.Title, "$service_name", cfg.Service)
+			interpolatedTitle = strings.ReplaceAll(interpolatedTitle, "$ns_service_name", cfg.Service)
+
+			if cfg.Node != "" {
+				interpolatedTitle = strings.ReplaceAll(interpolatedTitle, "$node_name", cfg.Node)
+			}
+
+			// Override the struct title so it carries into the graph image
+			graphConfig.Title = interpolatedTitle
+
 			nameBase := graphConfig.Title
+
+			// Deterministic Filenames: Strip any dynamic prefix (like "Service - Title")
+			if parts := strings.Split(nameBase, " - "); len(parts) > 1 {
+				nameBase = parts[len(parts)-1]
+			}
+
 			if nameBase == "" {
 				nameBase = "untitled_graph"
 			}
