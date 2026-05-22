@@ -11,6 +11,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -379,7 +380,8 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 
 			legendText := s.Legend
 			for key, val := range result.Metric {
-				legendText = strings.ReplaceAll(legendText, "{{ "+key+" }}", val)
+				re := regexp.MustCompile("\\{\\{\\s*" + regexp.QuoteMeta(key) + "\\s*\\}\\}")
+				legendText = re.ReplaceAllString(legendText, val)
 			}
 
 			seriesColor := Palette[(i+resultIdx)%len(Palette)]
