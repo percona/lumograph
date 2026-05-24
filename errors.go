@@ -4,12 +4,16 @@ import "errors"
 
 // Configuration & Validation Errors
 var (
-	ErrMissingTitle  = errors.New("missing a 'title'")
-	ErrMissingGroup  = errors.New("missing a 'group'")
-	ErrMissingSeries = errors.New("has no series defined")
-	ErrMissingLegend = errors.New("has an empty 'legend'")
-	ErrMissingExpr   = errors.New("has an empty 'expr'")
-	ErrEmtptyConfig  = errors.New("graph config is empty")
+	ErrMissingTitle     = errors.New("missing a 'title'")
+	ErrMissingGroup     = errors.New("missing a 'group'")
+	ErrMissingSeries    = errors.New("has no series defined")
+	ErrMissingLegend    = errors.New("has an empty 'legend'")
+	ErrMissingExpr      = errors.New("has an empty 'expr'")
+	ErrEmptyConfig      = errors.New("graph config is empty")
+	ErrEndpointRequired = errors.New("-endpoint flag is required (base URI of the target PMM server)")
+	ErrServiceRequired  = errors.New("-service flag is required (use list-services to query PMM)")
+	ErrTokenRequired    = errors.New("-token flag is required (can also set PMM_TOKEN env)")
+	ErrGroupsRequired   = errors.New("-groups list is required (use list-groups to view known groups)")
 )
 
 // API & Networking Errors
@@ -30,9 +34,11 @@ var (
 
 // Graphing & Plotting Errors
 var (
-	ErrNoValidPoints = errors.New("no valid points found")
-	ErrCreateOutput  = errors.New("creating output file")
-	ErrSavePlot      = errors.New("saving plot")
+	ErrNoValidPoints      = errors.New("no valid points found")
+	ErrCreateOutput       = errors.New("creating output file")
+	ErrSavePlot           = errors.New("saving plot")
+	ErrInvalidValueLength = errors.New("invalid value length")
+	ErrInvalidValueType   = errors.New("invalid value type")
 )
 
 // Dashboard Fetching Errors

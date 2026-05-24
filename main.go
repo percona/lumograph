@@ -4,8 +4,12 @@ package main
 
 import (
 	_ "embed"
+	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
+	"sort"
 	"strings"
 
 	"go.uber.org/zap"
@@ -29,7 +33,7 @@ var boldFont = font.Font{Typeface: "Bold", Weight: xfont.WeightBold, Size: vg.Po
 
 func main() {
 
-	cmd, cfg, _ := parseFlags()
+	cmd, cfg := parseFlags()
 
 	zap.S().Infof("--- Lumograph %s ---", Version)
 
@@ -47,7 +51,12 @@ func executeListGroups() {
 
 	zap.S().Info("Available Graph Groups:")
 
-	for g := range LumoGraphs {
+	// Loop over the available graph groups
+	groups := slices.Collect(maps.Keys(LumoGraphs))
+
+	sort.Strings(groups)
+
+	for _, g := range groups {
 		zap.S().Infof("  - %s", g)
 	}
 }
@@ -67,7 +76,11 @@ func executeListServices(cfg *LumoConfig) {
 
 func executeGetGraphs(cfg *LumoConfig) {
 
-	validateGetGraphsFlags(cfg)
+	// Validate the flags
+	err := validateGetGraphsFlags(cfg)
+	if err != nil {
+		zap.S().Fatalf("error: %v", err)
+	}
 
 	// Auto-discover node name if not provided
 	if cfg.Node == "" {
@@ -84,36 +97,46 @@ func executeGetGraphs(cfg *LumoConfig) {
 		}
 	}
 
-	initFonts()
+	// Initialize fonts
+	err = initFonts()
+	if err != nil {
+		zap.S().Fatalf("error initializing fonts: %v", err)
+	}
 
+	// Set output directory for graph images
 	if cfg.OutDir == "" {
 		cfg.OutDir = cfg.Service
 	}
 
+	// Create output directory if it doesn't exist
 	if err := os.MkdirAll(cfg.OutDir, 0o750); err != nil {
 		zap.S().Fatalf("error creating output directory '%s': %v", cfg.OutDir, err)
 	}
 
-	for rg := range strings.SplitSeq(cfg.Groups, ",") {
+	// Loop over each group of graphs
+	for graphGroup := range strings.SplitSeq(cfg.Groups, ",") {
 
-		rg = strings.TrimSpace(rg)
-		if rg == "" {
+		graphGroup = strings.TrimSpace(graphGroup)
+		if graphGroup == "" {
 			continue
 		}
 
-		graphConfigs, exists := LumoGraphs[rg]
+		graphConfigs, exists := LumoGraphs[graphGroup]
 		if !exists {
-			zap.S().Fatalf("error: requested group '%s' does not exist in the predefined configurations", rg)
+			zap.S().Errorf("error: requested group '%s' does not exist in the predefined configurations", graphGroup)
+			continue
 		}
 
 		if err := validateGraphConfigs(graphConfigs); err != nil {
-			zap.S().Fatalf("validation error in group '%s': %v", rg, err)
+			zap.S().Errorf("validation error in group '%s': %v", graphGroup, err)
+			continue
 		}
 
 		for _, graphConfig := range graphConfigs {
 
 			if len(graphConfig.Series) == 0 {
-				zap.S().Fatalf("error: graph '%s': no series defined", graphConfig.Title)
+				zap.S().Errorf("error: graph '%s': no series defined", graphConfig.Title)
+				continue
 			}
 
 			// Interpolate title variables
@@ -150,35 +173,37 @@ func executeGetGraphs(cfg *LumoConfig) {
 	}
 }
 
-func validateGetGraphsFlags(cfg *LumoConfig) {
+func validateGetGraphsFlags(cfg *LumoConfig) error {
 
 	if cfg.Endpoint == "" {
-		zap.S().Fatal("error: -endpoint flag is required. The base URI of the target PMM server.")
+		return ErrEndpointRequired
 	}
 
 	if cfg.Service == "" {
-		zap.S().Fatal("error: -service flag is required. Use 'list-services' to query PMM")
+		return ErrServiceRequired
 	}
 
 	if cfg.Token == "" {
-		zap.S().Fatal("error: -token flag is required. (Can also set PMM_TOKEN env)")
+		return ErrTokenRequired
 	}
 
 	if cfg.Groups == "" {
-		zap.S().Fatal("error: -groups list is required. Use 'list-groups' to view known groups.")
+		return ErrGroupsRequired
 	}
+
+	return nil
 }
 
-func initFonts() {
+func initFonts() error {
 
 	ttf, err := opentype.Parse(mediumFontTTF)
 	if err != nil {
-		zap.S().Fatalf("error parsing embedded font: %v", err)
+		return fmt.Errorf("error parsing embedded font: %w", err)
 	}
 
 	ttfBold, err := opentype.Parse(boldFontTTF)
 	if err != nil {
-		zap.S().Fatalf("error parsing embedded bold font: %v", err)
+		return fmt.Errorf("error parsing embedded bold font: %w", err)
 	}
 
 	font.DefaultCache.Add([]font.Face{
@@ -193,4 +218,6 @@ func initFonts() {
 	})
 
 	plot.DefaultFont = mediumFont
+
+	return nil
 }
