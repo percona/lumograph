@@ -142,21 +142,24 @@ func fetchSeries(lumoConfig *LumoConfig, expr, legend string) (*VMResponse, erro
 		interpolatedExpr = strings.ReplaceAll(interpolatedExpr, "$node_name", lumoConfig.Node)
 	}
 
-	base, _ := url.Parse(lumoConfig.Endpoint)
-	base.Path = "/victoriametrics/prometheus/api/v1/query_range"
+	// Handle trailing slash in endpoint URL
+	urlPath, err := url.JoinPath(strings.TrimRight(lumoConfig.Endpoint, "/"), "victoriametrics/prometheus/api/v1/query_range")
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrCreateRequest, err)
+	}
 
-	q := base.Query()
+	q := url.Values{}
 	q.Set("query", interpolatedExpr)
 	q.Set("step", lumoConfig.Interval)
 	q.Set("start", strconv.FormatInt(lumoConfig.Start.Unix(), 10))
 	q.Set("end", strconv.FormatInt(lumoConfig.End.Unix(), 10))
 
-	base.RawQuery = q.Encode()
+	urlPath += "?" + q.Encode()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, base.String(), http.NoBody)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlPath, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrCreateRequest, err)
 	}

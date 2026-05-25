@@ -187,7 +187,7 @@ func fetchAndTransformDashboard(dash YamlDashboard) []GraphConfig {
 
 func downloadGrafanaDashboard(url string) (*GrafanaDashboard, error) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, http.NoBody)
