@@ -31,7 +31,7 @@ const (
 	listServicesCommand = "list-services"
 )
 
-func parseFlags() (string, LumoConfig, []string) {
+func parseFlags() (string, LumoConfig) {
 
 	if len(os.Args) < 2 {
 		printUsage()
@@ -45,8 +45,6 @@ func parseFlags() (string, LumoConfig, []string) {
 	var startStr, endStr string
 
 	getCmd, listCmd, listServicesCmd := setupFlagSets(&cfg, &startStr, &endStr)
-
-	var parsedArgs []string
 
 	var activeCmd *flag.FlagSet
 
@@ -67,8 +65,6 @@ func parseFlags() (string, LumoConfig, []string) {
 		os.Exit(1)
 	}
 
-	parsedArgs = activeCmd.Args()
-
 	initLogger(cfg.Debug)
 
 	if command == getGraphsCommand || command == listServicesCommand {
@@ -79,7 +75,7 @@ func parseFlags() (string, LumoConfig, []string) {
 		cfg.Start, cfg.End = resolveTimeRanges(startStr, endStr)
 	}
 
-	return command, cfg, parsedArgs
+	return command, cfg
 }
 
 func setupFlagSets(cfg *LumoConfig, startStr, endStr *string) (*flag.FlagSet, *flag.FlagSet, *flag.FlagSet) {
@@ -101,8 +97,8 @@ func setupFlagSets(cfg *LumoConfig, startStr, endStr *string) (*flag.FlagSet, *f
 
 	listCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
 
-	listServicesCmd.StringVar(&cfg.Endpoint, "endpoint", "", "VictoriaMetrics endpoint URL (required)")
-	listServicesCmd.StringVar(&cfg.Token, "token", "", "Bearer token for VictoriaMetrics auth (can also use PMM_TOKEN env var)")
+	listServicesCmd.StringVar(&cfg.Endpoint, "endpoint", "", "PMM endpoint URL (required)")
+	listServicesCmd.StringVar(&cfg.Token, "token", "", "Service account PMM API token (can also use PMM_TOKEN env var)")
 	listServicesCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
 
 	return getCmd, listCmd, listServicesCmd

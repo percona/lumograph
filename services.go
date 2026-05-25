@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -24,7 +26,13 @@ func getPmmServices(endpoint, token string, debug bool) ([]PMMService, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint+"/v1/management/services", http.NoBody)
+	// Handle trailing slash in endpoint URL
+	urlPath, err := url.JoinPath(strings.TrimRight(endpoint, "/"), "v1/management/services")
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrCreateRequest, err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlPath, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrCreateRequest, err)
 	}
@@ -84,16 +92,9 @@ func listServices(endpoint, token string, debug bool) {
 
 	for _, service := range services {
 		if service.ServiceName != "" {
-			zap.S().Infof("  - %s (%s)", service.ServiceName, serviceTypeToString(service.ServiceType))
+			zap.S().Infof("  - %s (%s)", service.ServiceName, service.ServiceType)
 		}
 	}
-}
-
-func serviceTypeToString(sType string) string {
-	if sType == "" {
-		return "unknown"
-	}
-	return sType
 }
 
 func discoverNodeName(endpoint, token, serviceName string) (string, error) {

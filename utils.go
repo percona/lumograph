@@ -63,7 +63,7 @@ func toSnakeCase(s string) string {
 func validateGraphConfigs(configs []GraphConfig) error {
 
 	if len(configs) == 0 {
-		return ErrEmtptyConfig
+		return ErrEmptyConfig
 	}
 
 	for i, cfg := range configs {
@@ -93,17 +93,4 @@ func validateGraphConfigs(configs []GraphConfig) error {
 	}
 
 	return nil
-}
-
-// GetKnownGroups extracts a unique set of all groups defined in a GraphConfig array.
-func GetKnownGroups(configs []GraphConfig) map[string]bool {
-
-	knownGroups := make(map[string]bool)
-	for _, gc := range configs {
-		if gc.Group != "" {
-			knownGroups[gc.Group] = true
-		}
-	}
-
-	return knownGroups
 }

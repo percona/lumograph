@@ -64,11 +64,11 @@ func executeListGroups() {
 func executeListServices(cfg *LumoConfig) {
 
 	if cfg.Endpoint == "" {
-		zap.S().Fatal("error: -endpoint flag is required")
+		zap.S().Fatalf("%w: -endpoint flag is required", ErrFlagRequired)
 	}
 
 	if cfg.Token == "" {
-		zap.S().Fatal("error: -token flag is required")
+		zap.S().Fatalf("%w: -token flag is required", ErrFlagRequired)
 	}
 
 	listServices(cfg.Endpoint, cfg.Token, cfg.Debug)
@@ -176,19 +176,19 @@ func executeGetGraphs(cfg *LumoConfig) {
 func validateGetGraphsFlags(cfg *LumoConfig) error {
 
 	if cfg.Endpoint == "" {
-		return ErrEndpointRequired
+		return fmt.Errorf("%w: -endpoint flag is required", ErrFlagRequired)
 	}
 
 	if cfg.Service == "" {
-		return ErrServiceRequired
+		return fmt.Errorf("%w: -service flag is required", ErrFlagRequired)
 	}
 
 	if cfg.Token == "" {
-		return ErrTokenRequired
+		return fmt.Errorf("%w: -token flag is required", ErrFlagRequired)
 	}
 
 	if cfg.Groups == "" {
-		return ErrGroupsRequired
+		return fmt.Errorf("%w: -groups flag is required", ErrFlagRequired)
 	}
 
 	return nil

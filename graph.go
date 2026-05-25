@@ -207,78 +207,95 @@ func fetchSeries(lumoConfig *LumoConfig, expr, legend string) (*VMResponse, erro
 	return &vmResp, nil
 }
 
-func parseSeriesData(values [][]interface{}) (plotter.XYs, float64, float64, float64, float64, error) { // #nogocritic
+type SeriesData struct {
+	Points plotter.XYs
+	Min    float64
+	Max    float64
+	Sum    float64
+	Count  float64
+}
 
-	minVal := math.MaxFloat64
-	maxVal := -math.MaxFloat64
-	sumVal := 0.0
-	countVal := 0.0
-	pts := make(plotter.XYs, 0, len(values))
+func parseSeriesData(values [][]interface{}) (SeriesData, error) {
+
+	seriesData := SeriesData{
+		Points: make(plotter.XYs, 0, len(values)),
+		Min:    math.MaxFloat64,
+		Max:    -math.MaxFloat64,
+		Sum:    0.0,
+		Count:  0.0,
+	}
 
 	// Loop over the values from the series and mangle
 	for _, v := range values {
 
 		if len(v) != 2 {
-			continue
+			return seriesData, fmt.Errorf("%w: invalid value length", ErrInvalidValueLength)
 		}
 
 		t, ok1 := v[0].(float64)
 		valStr, ok2 := v[1].(string)
 
 		if !ok1 || !ok2 {
-			continue
+			return seriesData, fmt.Errorf("%w: invalid value type", ErrInvalidValueType)
 		}
 
 		val, err := strconv.ParseFloat(valStr, 64)
 		if err != nil {
-			continue
+			return seriesData, fmt.Errorf("%w: invalid value type", ErrInvalidValueType)
 		}
 
-		if val < minVal {
-			minVal = val
+		if val < seriesData.Min {
+			seriesData.Min = val
 		}
 
-		if val > maxVal {
-			maxVal = val
+		if val > seriesData.Max {
+			seriesData.Max = val
 		}
 
-		sumVal += val
-		countVal++
+		seriesData.Sum += val
+		seriesData.Count++
 
-		pts = append(pts, plotter.XY{X: t, Y: val})
+		seriesData.Points = append(seriesData.Points, plotter.XY{X: t, Y: val})
 	}
 
-	if countVal == 0 {
-		return nil, 0, 0, 0, 0, ErrNoValidPoints
+	if seriesData.Count == 0 {
+		return seriesData, fmt.Errorf("%w: no valid points", ErrNoValidPoints)
 	}
 
-	return pts, minVal, maxVal, sumVal, countVal, nil
+	return seriesData, nil
 }
 
 // addVisualSeries is responsible for taking the XY points and adding them to the graph image
-func addVisualSeries(p *plot.Plot, pts plotter.XYs, baseColor color.Color) {
+func addVisualSeries(p *plot.Plot, seriesData SeriesData, baseColor color.Color) {
 
-	line, _ := plotter.NewLine(pts)
+	line, err := plotter.NewLine(seriesData.Points)
+	if err != nil {
+		zap.S().Warnf("warning: creating visual series line: %v", err)
+	}
+
 	line.Color = baseColor
 
-	polyPts := make(plotter.XYs, len(pts)+2)
-	polyPts[0] = plotter.XY{X: pts[0].X, Y: 0}
+	p.Add(line)
 
-	for j, pt := range pts {
+	polyPts := make(plotter.XYs, len(seriesData.Points)+2)
+	polyPts[0] = plotter.XY{X: seriesData.Points[0].X, Y: 0}
+
+	for j, pt := range seriesData.Points {
 		polyPts[j+1] = pt
 	}
 
-	polyPts[len(polyPts)-1] = plotter.XY{X: pts[len(pts)-1].X, Y: 0}
+	polyPts[len(polyPts)-1] = plotter.XY{X: seriesData.Points[len(seriesData.Points)-1].X, Y: 0}
 
 	poly, err := plotter.NewPolygon(polyPts)
-	if err == nil {
-		r, g, b, _ := baseColor.RGBA()
-		poly.Color = color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: 32} // #nosec
-		poly.Width = 0
-		p.Add(poly)
+	if err != nil {
+		zap.S().Warnf("warning: creating visual series polygon: %v", err)
 	}
 
-	p.Add(line)
+	r, g, b, _ := baseColor.RGBA()
+	poly.Color = color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: 32} // #nosec
+	poly.Width = 0
+
+	p.Add(poly)
 }
 
 // drawLegendTable draws each of the 'rows' within the table-legend
@@ -362,20 +379,20 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 		}
 
 		if len(vmResp.Data.Result) == 0 {
-			zap.S().Errorf("warning: no data returned for %s", s.Legend)
+			zap.S().Warnf("warning: no data returned for %s", s.Legend)
 			continue
 		}
 
 		// Loop over results from PMM
 		for resultIdx, result := range vmResp.Data.Result {
 
-			pts, minV, maxV, sumV, countV, err := parseSeriesData(result.Values)
+			seriesData, err := parseSeriesData(result.Values)
 			if err != nil {
 				continue
 			}
 
-			if maxV > globalMaxY {
-				globalMaxY = maxV
+			if seriesData.Max > globalMaxY {
+				globalMaxY = seriesData.Max
 			}
 
 			legendText := s.Legend
@@ -385,14 +402,14 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 			}
 
 			seriesColor := Palette[(i+resultIdx)%len(Palette)]
-			addVisualSeries(p, pts, seriesColor)
+			addVisualSeries(p, seriesData, seriesColor)
 
 			tableRows = append(tableRows, TableRow{
 				Legend: legendText,
 				Color:  seriesColor,
-				Min:    minV,
-				Max:    maxV,
-				Avg:    sumV / countV,
+				Min:    seriesData.Min,
+				Max:    seriesData.Max,
+				Avg:    seriesData.Sum / seriesData.Count,
 			})
 		}
 	}
