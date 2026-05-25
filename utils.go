@@ -60,6 +60,20 @@ func toSnakeCase(s string) string {
 	return strings.Trim(s, "_")
 }
 
+func interpolateGraphConfig(s string, cfg *LumoConfig) string {
+
+	s = strings.ReplaceAll(s, "$service_name", cfg.Service)
+	s = strings.ReplaceAll(s, "$ns_service_name", cfg.Service)
+
+	s = strings.ReplaceAll(s, "$interval", cfg.Interval)
+
+	if cfg.Node != "" {
+		s = strings.ReplaceAll(s, "$node", cfg.Node)
+	}
+
+	return strings.TrimSpace(s)
+}
+
 func validateGraphConfigs(configs []GraphConfig) error {
 
 	if len(configs) == 0 {

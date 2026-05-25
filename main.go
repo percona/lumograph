@@ -139,16 +139,8 @@ func executeGetGraphs(cfg *LumoConfig) {
 				continue
 			}
 
-			// Interpolate title variables
-			interpolatedTitle := strings.ReplaceAll(graphConfig.Title, "$service_name", cfg.Service)
-			interpolatedTitle = strings.ReplaceAll(interpolatedTitle, "$ns_service_name", cfg.Service)
-
-			if cfg.Node != "" {
-				interpolatedTitle = strings.ReplaceAll(interpolatedTitle, "$node_name", cfg.Node)
-			}
-
 			// Override the struct title so it carries into the graph image
-			graphConfig.Title = interpolatedTitle
+			graphConfig.Title = interpolateGraphConfig(graphConfig.Title, cfg)
 
 			nameBase := graphConfig.Title
 

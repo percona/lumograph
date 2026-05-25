@@ -135,13 +135,6 @@ func (t CustomYTicker) Ticks(minVal, maxVal float64) []plot.Tick {
 
 func fetchSeries(lumoConfig *LumoConfig, expr, legend string) (*VMResponse, error) {
 
-	interpolatedExpr := strings.ReplaceAll(expr, "$service_name", lumoConfig.Service)
-	interpolatedExpr = strings.ReplaceAll(interpolatedExpr, "$interval", lumoConfig.Interval)
-
-	if lumoConfig.Node != "" {
-		interpolatedExpr = strings.ReplaceAll(interpolatedExpr, "$node_name", lumoConfig.Node)
-	}
-
 	// Handle trailing slash in endpoint URL
 	urlPath, err := url.JoinPath(strings.TrimRight(lumoConfig.Endpoint, "/"), "victoriametrics/prometheus/api/v1/query_range")
 	if err != nil {
@@ -149,7 +142,7 @@ func fetchSeries(lumoConfig *LumoConfig, expr, legend string) (*VMResponse, erro
 	}
 
 	q := url.Values{}
-	q.Set("query", interpolatedExpr)
+	q.Set("query", interpolateGraphConfig(expr, lumoConfig))
 	q.Set("step", lumoConfig.Interval)
 	q.Set("start", strconv.FormatInt(lumoConfig.Start.Unix(), 10))
 	q.Set("end", strconv.FormatInt(lumoConfig.End.Unix(), 10))
