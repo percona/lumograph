@@ -16,9 +16,11 @@ import (
 
 //nolint:tagliatelle // JSON is returned by Grafana
 type PMMService struct {
-	ServiceName string `json:"service_name"`
-	ServiceType string `json:"service_type"`
-	NodeName    string `json:"node_name"`
+	ServiceName    string `json:"service_name"`
+	ServiceType    string `json:"service_type"`
+	NodeName       string `json:"node_name"`
+	ClusterName    string `json:"cluster"`
+	ReplicationSet string `json:"replication_set"`
 }
 
 func getPmmServices(endpoint, token string, debug bool) ([]PMMService, error) {
@@ -97,21 +99,18 @@ func listServices(endpoint, token string, debug bool) {
 	}
 }
 
-func discoverNodeName(endpoint, token, serviceName string) (string, error) {
+func getServiceByName(endpoint, token, serviceName string) (PMMService, error) {
 
 	services, err := getPmmServices(endpoint, token, false)
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch services for auto-discovery: %w", err)
+		return PMMService{}, fmt.Errorf("failed to fetch services: %w", err)
 	}
 
 	for _, s := range services {
 		if s.ServiceName == serviceName {
-			if s.NodeName == "" {
-				return "", fmt.Errorf("service '%s' found, but %w", serviceName, ErrNodeNameEmpty)
-			}
-			return s.NodeName, nil
+			return s, nil
 		}
 	}
 
-	return "", fmt.Errorf("%w: '%s'", ErrServiceNotFound, serviceName)
+	return PMMService{}, fmt.Errorf("%w: '%s'", ErrServiceNotFound, serviceName)
 }

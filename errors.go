@@ -31,8 +31,9 @@ var (
 
 // Graphing & Plotting Errors
 var (
+	ErrInitFonts          = errors.New("error initializing fonts")
 	ErrNoValidPoints      = errors.New("no valid points found")
-	ErrCreateOutput       = errors.New("creating output file")
+	ErrCreateOutput       = errors.New("creating output")
 	ErrSavePlot           = errors.New("saving plot")
 	ErrInvalidValueLength = errors.New("invalid value length")
 	ErrInvalidValueType   = errors.New("invalid value type")

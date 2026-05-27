@@ -74,7 +74,7 @@ func interpolateGraphConfig(s string, cfg *LumoConfig) string {
 	s = strings.ReplaceAll(s, "$interval", cfg.Interval)
 
 	if cfg.Node != "" {
-		s = strings.ReplaceAll(s, "$node", cfg.Node)
+		s = strings.ReplaceAll(s, "$node_name", cfg.Node)
 	}
 
 	return strings.TrimSpace(s)

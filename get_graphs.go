@@ -30,24 +30,20 @@ func prepareGetGraphs(cfg *LumoConfig) error {
 		return fmt.Errorf("error: %w", err)
 	}
 
-	if cfg.Node == "" {
-		zap.S().Infof("Attempting to auto-discover node name for service '%s'...", cfg.Service)
-
-		nodeName, err := discoverNodeName(cfg.Endpoint, cfg.Token, cfg.Service)
-		if err != nil {
-			return fmt.Errorf(
-				"node discovery failed: %w. Use the -node flag to supply the correct node name for this service",
-				err,
-			)
-		}
-
-		zap.S().Infof("Discovered node: %s", nodeName)
-
-		cfg.Node = nodeName
+	// Get info about this service
+	service, err := getServiceByName(cfg.Endpoint, cfg.Token, cfg.Service)
+	if err != nil {
+		return fmt.Errorf("%w: %w", ErrServiceNotFound, err)
 	}
 
+	if service.NodeName == "" {
+		return fmt.Errorf("%w: service '%s' has no node name. Use the -node flag to supply the correct node name for this service", ErrNodeNameEmpty, cfg.Service)
+	}
+
+	cfg.Node = service.NodeName
+
 	if err := initFonts(); err != nil {
-		return fmt.Errorf("error initializing fonts: %w", err)
+		return fmt.Errorf("%w: %w", ErrInitFonts, err)
 	}
 
 	if cfg.OutDir == "" {
@@ -55,7 +51,7 @@ func prepareGetGraphs(cfg *LumoConfig) error {
 	}
 
 	if err := os.MkdirAll(cfg.OutDir, 0o750); err != nil {
-		return fmt.Errorf("error creating output directory '%s': %w", cfg.OutDir, err)
+		return fmt.Errorf("%w: '%s'", ErrCreateOutput, cfg.OutDir)
 	}
 
 	return nil
