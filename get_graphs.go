@@ -42,6 +42,10 @@ func prepareGetGraphs(cfg *LumoConfig) error {
 
 	cfg.Node = service.NodeName
 
+	if cfg.ClusterName == "" {
+		cfg.ClusterName = service.ClusterName
+	}
+
 	if err := initFonts(); err != nil {
 		return fmt.Errorf("%w: %w", ErrInitFonts, err)
 	}

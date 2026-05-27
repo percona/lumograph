@@ -11,16 +11,17 @@ import (
 
 // LumoConfig is the global application configuration derived from CLI flags
 type LumoConfig struct {
-	Endpoint string
-	Service  string
-	Node     string
-	Groups   string
-	OutDir   string
-	Interval string
-	Start    time.Time
-	End      time.Time
-	Token    string
-	Debug    bool
+	Endpoint    string
+	Service     string
+	Node        string
+	ClusterName string
+	Groups      string
+	OutDir      string
+	Interval    string
+	Start       time.Time
+	End         time.Time
+	Token       string
+	Debug       bool
 }
 
 const (
@@ -80,28 +81,29 @@ func parseFlags() (string, LumoConfig) {
 
 func setupFlagSets(cfg *LumoConfig, startStr, endStr *string) (*flag.FlagSet, *flag.FlagSet, *flag.FlagSet) {
 
-	getCmd := flag.NewFlagSet(getGraphsCommand, flag.ExitOnError)
-	listCmd := flag.NewFlagSet(listGroupsCommand, flag.ExitOnError)
+	getGraphsCmd := flag.NewFlagSet(getGraphsCommand, flag.ExitOnError)
+	listGroupsCmd := flag.NewFlagSet(listGroupsCommand, flag.ExitOnError)
 	listServicesCmd := flag.NewFlagSet(listServicesCommand, flag.ExitOnError)
 
-	getCmd.StringVar(&cfg.Endpoint, "endpoint", "", "PMM URL (required)")
-	getCmd.StringVar(&cfg.Service, "service", "", "PMM Service name (required)")
-	getCmd.StringVar(&cfg.Node, "node", "", "PMM Node name (optional)")
-	getCmd.StringVar(&cfg.Groups, "groups", "", "Comma-separated list of graph groups render (required)")
-	getCmd.StringVar(&cfg.OutDir, "outdir", "", "Output directory for graphs (optional, defaults to service name)")
-	getCmd.StringVar(&cfg.Interval, "interval", "5m", "Interval duration for graphs (e.g., 5m, 1h)")
-	getCmd.StringVar(startStr, "start", "", "Start time (YYYY-MM-DD HH:MM:SS, defaults to 24h ago)")
-	getCmd.StringVar(endStr, "end", "", "End time (YYYY-MM-DD HH:MM:SS, defaults to now)")
-	getCmd.StringVar(&cfg.Token, "token", "", "PMM API token (can also use PMM_TOKEN env var)")
-	getCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
+	getGraphsCmd.StringVar(&cfg.Endpoint, "endpoint", "", "PMM URL (required)")
+	getGraphsCmd.StringVar(&cfg.Service, "service", "", "PMM Service name (required)")
+	getGraphsCmd.StringVar(&cfg.Node, "node", "", "PMM Node name (optional)")
+	getGraphsCmd.StringVar(&cfg.ClusterName, "cluster-name", "", "For cluster-based graphs (ie: PXC, Mongo, etc) (optional)")
+	getGraphsCmd.StringVar(&cfg.Groups, "groups", "", "Comma-separated list of graph groups render (required)")
+	getGraphsCmd.StringVar(&cfg.OutDir, "outdir", "", "Output directory for graphs (optional, defaults to service name)")
+	getGraphsCmd.StringVar(&cfg.Interval, "interval", "5m", "Interval duration for graphs (e.g., 5m, 1h)")
+	getGraphsCmd.StringVar(startStr, "start", "", "Start time (YYYY-MM-DD HH:MM:SS, defaults to 24h ago)")
+	getGraphsCmd.StringVar(endStr, "end", "", "End time (YYYY-MM-DD HH:MM:SS, defaults to now)")
+	getGraphsCmd.StringVar(&cfg.Token, "token", "", "PMM API token (can also use PMM_TOKEN env var)")
+	getGraphsCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
 
-	listCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
+	listGroupsCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
 
 	listServicesCmd.StringVar(&cfg.Endpoint, "endpoint", "", "PMM endpoint URL (required)")
 	listServicesCmd.StringVar(&cfg.Token, "token", "", "Service account PMM API token (can also use PMM_TOKEN env var)")
 	listServicesCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
 
-	return getCmd, listCmd, listServicesCmd
+	return getGraphsCmd, listGroupsCmd, listServicesCmd
 }
 
 func resolveToken(cliToken string) string {
