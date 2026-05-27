@@ -91,7 +91,10 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 			seriesColor := Palette[(i+resultIdx)%len(Palette)]
 
 			// Add the visual series (ie: the graph line and fill polygon) to the plot
-			addVisualSeries(p, seriesData, seriesColor)
+			if err := addVisualSeries(p, seriesData, seriesColor); err != nil {
+				zap.S().Warnf("Error adding visual series: %v", err)
+				continue
+			}
 
 			// Add the series data to the table rows for the legend table
 			tableRows = append(tableRows, TableRow{
@@ -110,7 +113,12 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 		// Calculate the padding for the maximum Y value line
 		padding := math.Max(math.Abs(globalMaxY)*0.10, 1.0)
 
-		p.Y.Max = globalMaxY + padding
+		// If the maximum Y value is less than 1, set it to 1
+		if globalMaxY < 1 {
+			p.Y.Max = 1
+		} else {
+			p.Y.Max = globalMaxY + padding
+		}
 
 		// Add a maximum Y value line to the plot
 		p.Add(HLine{Y: p.Y.Max, Color: color.Gray{Y: 220}, Width: vg.Points(0.5)})

@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"go.uber.org/zap"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
@@ -107,6 +106,8 @@ func (t CustomYTicker) Ticks(minVal, maxVal float64) []plot.Tick {
 			labelStr = fmt.Sprintf("%.1fM", val/1000000)
 		case absVal >= 1000:
 			labelStr = fmt.Sprintf("%.1fK", val/1000)
+		case absVal <= 1 && maxVal <= 1:
+			labelStr = fmt.Sprintf("%.4f", val)
 		default:
 			labelStr = fmt.Sprintf("%.0f", val)
 		}
@@ -162,6 +163,11 @@ func parseSeriesData(values [][]interface{}) (SeriesData, error) {
 			return seriesData, fmt.Errorf("%w: invalid value type", ErrInvalidValueType)
 		}
 
+		// Prometheus may return +Inf, -Inf, or NaN; gonum plotter cannot render these.
+		if math.IsInf(val, 0) || math.IsNaN(val) {
+			continue
+		}
+
 		// Update the min value for this series
 		if val < seriesData.Min {
 			seriesData.Min = val
@@ -187,18 +193,19 @@ func parseSeriesData(values [][]interface{}) (SeriesData, error) {
 	return seriesData, nil
 }
 
-// addVisualSeries creates the line and fill polygon for the series and adds them to the image
-func addVisualSeries(p *plot.Plot, seriesData SeriesData, baseColor color.Color) {
+// addVisualSeries creates the line and fill polygon for the series and adds them to the image.
+func addVisualSeries(p *plot.Plot, seriesData SeriesData, baseColor color.Color) error {
 
 	// Create the line for the series
 	line, err := plotter.NewLine(seriesData.Points)
 	if err != nil {
-		zap.S().Warnf("warning: creating visual series line: %v", err)
+		return fmt.Errorf("%w: creating visual series line", err)
 	}
 
 	// Set the color of the line
 	line.Color = baseColor
 
+	// Add the line to the image
 	p.Add(line)
 
 	// Initialize the fill polygon for the series
@@ -218,7 +225,7 @@ func addVisualSeries(p *plot.Plot, seriesData SeriesData, baseColor color.Color)
 	// Create the fill polygon for the series
 	poly, err := plotter.NewPolygon(polyPts)
 	if err != nil {
-		zap.S().Warnf("warning: creating visual series polygon: %v", err)
+		return fmt.Errorf("%w: creating visual series polygon", err)
 	}
 
 	// Set the color of the fill polygon
@@ -226,6 +233,8 @@ func addVisualSeries(p *plot.Plot, seriesData SeriesData, baseColor color.Color)
 	poly.Color = color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: 32} // #nosec
 	poly.Width = 0
 
-	// Add the fill polygon to the image
+	// Add the fill polygon to the plot
 	p.Add(poly)
+
+	return nil
 }
