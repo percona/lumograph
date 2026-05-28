@@ -45,11 +45,11 @@ func executeListGroups() {
 func executeListServices(cfg *LumoConfig) {
 
 	if cfg.Endpoint == "" {
-		zap.S().Fatalf("%w: -endpoint flag is required", ErrFlagRequired)
+		zap.S().Fatalf("%v: -endpoint flag is required", ErrFlagRequired)
 	}
 
 	if cfg.Token == "" {
-		zap.S().Fatalf("%w: -token flag is required", ErrFlagRequired)
+		zap.S().Fatalf("%v: -token flag is required", ErrFlagRequired)
 	}
 
 	listServices(cfg.Endpoint, cfg.Token, cfg.Debug)
