@@ -82,6 +82,13 @@ func interpolateGraphConfig(s string, cfg *LumoConfig) string {
 		s = strings.ReplaceAll(s, "$replication_set", cfg.ClusterName)
 	}
 
+	// For PGSQL group
+	if cfg.Database == "" {
+		cfg.Database = ".*"
+	}
+
+	s = strings.ReplaceAll(s, "$database", cfg.Database)
+
 	return strings.TrimSpace(s)
 }
 

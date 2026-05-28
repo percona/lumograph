@@ -15,6 +15,7 @@ type LumoConfig struct {
 	Service     string
 	Node        string
 	ClusterName string
+	Database    string
 	Groups      string
 	OutDir      string
 	Interval    string
@@ -89,6 +90,7 @@ func setupFlagSets(cfg *LumoConfig, startStr, endStr *string) (*flag.FlagSet, *f
 	getGraphsCmd.StringVar(&cfg.Service, "service", "", "PMM Service name (required)")
 	getGraphsCmd.StringVar(&cfg.Node, "node", "", "PMM Node name (optional)")
 	getGraphsCmd.StringVar(&cfg.ClusterName, "cluster-name", "", "For cluster-based graphs (ie: PXC, Mongo, etc) (optional)")
+	getGraphsCmd.StringVar(&cfg.Database, "database", "", "Filter for PostgreSQL databases (optional)")
 	getGraphsCmd.StringVar(&cfg.Groups, "groups", "", "Comma-separated list of graph groups render (required)")
 	getGraphsCmd.StringVar(&cfg.OutDir, "outdir", "", "Output directory for graphs (optional, defaults to service name)")
 	getGraphsCmd.StringVar(&cfg.Interval, "interval", "5m", "Interval duration for graphs (e.g., 5m, 1h)")

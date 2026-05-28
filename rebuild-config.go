@@ -243,6 +243,11 @@ func mapGrafanaToLumo(dash YamlDashboard, grafanaDash *GrafanaDashboard) []Graph
 				continue
 			}
 
+			// Only 'timeseries' and 'graph' types are supported
+			if p.Type != "timeseries" && p.Type != "graph" {
+				continue
+			}
+
 			// If we don't want this graph, skip and go to next
 			if !wantedGraphs[p.Title] {
 				continue
@@ -339,15 +344,13 @@ func saveGraphConfigs(configs []GraphConfig) {
 
 	sb.WriteString("}\n")
 
-	outPath := "lumographs.go"
-
 	// #nosec
-	if err := os.WriteFile(outPath, []byte(sb.String()), 0o644); err != nil {
-		zap.S().Errorf("error writing %s: %v", outPath, err)
+	if err := os.WriteFile("lumographs.go", []byte(sb.String()), 0o644); err != nil {
+		zap.S().Errorf("error writing lumographs.go: %v", err)
 		return
 	}
 
-	zap.S().Infof("-> Successfully generated %s", outPath)
+	zap.S().Infof("-> Successfully generated lumographs.go")
 }
 
 func initLogger() {
