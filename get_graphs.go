@@ -84,7 +84,7 @@ func renderGraph(cfg *LumoConfig, graphConfig GraphConfig) {
 	graphConfig.Title = interpolateGraphConfig(graphConfig.Title, cfg)
 	outputFile := graphOutputPath(cfg.OutDir, graphConfig.Title)
 
-	zap.S().Infof("Generating graph for title: %s -> %s", graphConfig.Title, outputFile)
+	zap.S().Infof("Generating graph '%s'", graphConfig.Title)
 
 	if err := generateGraph(cfg, &graphConfig, outputFile); err != nil {
 		zap.S().Errorf("error generating graph: %v", err)

@@ -3,7 +3,9 @@ package main
 //go:generate go run rebuild-config.go resources/graphs
 
 import (
+	"fmt"
 	"maps"
+	"os"
 	"slices"
 	"sort"
 	"strings"
@@ -31,14 +33,14 @@ func main() {
 
 func executeListGroups() {
 
-	zap.S().Info("Available Graph Groups:")
+	_, _ = fmt.Fprintf(os.Stdout, "-- Available Graph Groups:\n")
 
 	groups := slices.Collect(maps.Keys(LumoGraphs))
 
 	sort.Strings(groups)
 
 	for _, g := range groups {
-		zap.S().Infof("  - %s", g)
+		_, _ = fmt.Fprintf(os.Stdout, "  - %s\n", g)
 	}
 }
 

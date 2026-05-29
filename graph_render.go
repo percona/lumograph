@@ -167,7 +167,7 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 		return fmt.Errorf("%w: %w", ErrSavePlot, err)
 	}
 
-	zap.S().Infof("Saved chart to %s", output)
+	zap.S().Infof("  -> Saved chart to '%s'", output)
 
 	return nil
 }

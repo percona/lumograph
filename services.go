@@ -5,9 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
+	"slices"
+	"sort"
 	"strings"
 	"time"
 
@@ -82,7 +86,8 @@ func getPmmServices(endpoint, token string, debug bool) ([]PMMService, error) {
 	return response.Services, nil
 }
 
-// Query PMM to get a list of all services, and display the result
+// Query PMM to get a list of all services, and display the result grouped by
+// service type, with each group sorted by service name.
 func listServices(endpoint, token string, debug bool) {
 
 	services, err := getPmmServices(endpoint, token, debug)
@@ -90,11 +95,28 @@ func listServices(endpoint, token string, debug bool) {
 		zap.S().Fatalf("Failed to retrieve services: %v", err)
 	}
 
-	zap.S().Info("Available Services:")
-
+	// Group the services by their type
+	byType := make(map[string][]string)
 	for _, service := range services {
-		if service.ServiceName != "" {
-			zap.S().Infof("  - %s (%s)", service.ServiceName, service.ServiceType)
+		if service.ServiceName == "" {
+			continue
+		}
+
+		byType[service.ServiceType] = append(byType[service.ServiceType], service.ServiceName)
+	}
+
+	// Sort the service types so the groups are emitted deterministically
+	types := slices.Collect(maps.Keys(byType))
+	sort.Strings(types)
+
+	for _, sType := range types {
+		names := byType[sType]
+		sort.Strings(names)
+
+		_, _ = fmt.Fprintf(os.Stdout, "%s:\n", sType)
+
+		for _, name := range names {
+			_, _ = fmt.Fprintf(os.Stdout, "  - %s\n", name)
 		}
 	}
 }
