@@ -8,7 +8,6 @@ import (
 	"os"
 	"slices"
 	"sort"
-	"strings"
 
 	"go.uber.org/zap"
 )
@@ -63,13 +62,7 @@ func executeGetGraphs(cfg *LumoConfig) {
 		zap.S().Fatal(err)
 	}
 
-	for graphGroup := range strings.SplitSeq(cfg.Groups, ",") {
-
-		graphGroup = strings.TrimSpace(graphGroup)
-		if graphGroup == "" {
-			continue
-		}
-
+	for graphGroup := range cfg.Groups {
 		renderGraphGroup(cfg, graphGroup)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -16,7 +17,8 @@ type LumoConfig struct {
 	Node        string
 	ClusterName string
 	Database    string
-	Groups      string
+	ReplSet     string
+	Groups      map[string]struct{}
 	OutDir      string
 	Interval    string
 	Start       time.Time
@@ -44,9 +46,9 @@ func parseFlags() (string, LumoConfig) {
 
 	var cfg LumoConfig
 
-	var startStr, endStr string
+	var startStr, endStr, groupsStr string
 
-	getCmd, listCmd, listServicesCmd := setupFlagSets(&cfg, &startStr, &endStr)
+	getCmd, listCmd, listServicesCmd := setupFlagSets(&cfg, &startStr, &endStr, &groupsStr)
 
 	var activeCmd *flag.FlagSet
 
@@ -75,12 +77,13 @@ func parseFlags() (string, LumoConfig) {
 
 	if command == getGraphsCommand {
 		cfg.Start, cfg.End = resolveTimeRanges(startStr, endStr)
+		cfg.Groups = parseGroups(groupsStr)
 	}
 
 	return command, cfg
 }
 
-func setupFlagSets(cfg *LumoConfig, startStr, endStr *string) (*flag.FlagSet, *flag.FlagSet, *flag.FlagSet) {
+func setupFlagSets(cfg *LumoConfig, startStr, endStr, groupsStr *string) (*flag.FlagSet, *flag.FlagSet, *flag.FlagSet) {
 
 	getGraphsCmd := flag.NewFlagSet(getGraphsCommand, flag.ExitOnError)
 	listGroupsCmd := flag.NewFlagSet(listGroupsCommand, flag.ExitOnError)
@@ -91,7 +94,8 @@ func setupFlagSets(cfg *LumoConfig, startStr, endStr *string) (*flag.FlagSet, *f
 	getGraphsCmd.StringVar(&cfg.Node, "node", "", "PMM Node name (optional)")
 	getGraphsCmd.StringVar(&cfg.ClusterName, "cluster-name", "", "For cluster-based graphs (ie: PXC, Mongo, etc) (optional)")
 	getGraphsCmd.StringVar(&cfg.Database, "database", "", "Filter for PostgreSQL databases (optional)")
-	getGraphsCmd.StringVar(&cfg.Groups, "groups", "", "Comma-separated list of graph groups render (required)")
+	getGraphsCmd.StringVar(&cfg.ReplSet, "replset", "", "MongoDB replica set name (optional)")
+	getGraphsCmd.StringVar(groupsStr, "groups", "", "Comma-separated list of graph groups render (required)")
 	getGraphsCmd.StringVar(&cfg.OutDir, "outdir", "", "Output directory for graphs (optional, defaults to service name)")
 	getGraphsCmd.StringVar(&cfg.Interval, "interval", "5m", "Interval duration for graphs (e.g., 5m, 1h)")
 	getGraphsCmd.StringVar(startStr, "start", "", "Start time (YYYY-MM-DD HH:MM:SS, defaults to 24h ago)")
@@ -147,6 +151,24 @@ func resolveTimeRanges(startStr, endStr string) (time.Time, time.Time) {
 	}
 
 	return start, end
+}
+
+// parseGroups splits the comma-separated -groups flag into a set, trimming
+// whitespace and discarding empty entries.
+func parseGroups(s string) map[string]struct{} {
+
+	groups := make(map[string]struct{})
+
+	for g := range strings.SplitSeq(s, ",") {
+		g = strings.TrimSpace(g)
+		if g == "" {
+			continue
+		}
+
+		groups[g] = struct{}{}
+	}
+
+	return groups
 }
 
 func printUsage() {

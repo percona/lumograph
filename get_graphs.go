@@ -30,6 +30,11 @@ func prepareGetGraphs(cfg *LumoConfig) error {
 		return fmt.Errorf("error: %w", err)
 	}
 
+	// Register the embedded fonts used for the legend table before any rendering
+	if err := initFonts(); err != nil {
+		return fmt.Errorf("%w: %w", ErrInitFonts, err)
+	}
+
 	// Get info about this service
 	service, err := getServiceByName(cfg.Endpoint, cfg.Token, cfg.Service)
 	if err != nil {
@@ -46,8 +51,9 @@ func prepareGetGraphs(cfg *LumoConfig) error {
 		cfg.ClusterName = service.ClusterName
 	}
 
-	if err := initFonts(); err != nil {
-		return fmt.Errorf("%w: %w", ErrInitFonts, err)
+	// MongoDB replset graph group requires the -replset flag
+	if _, exists := cfg.Groups["replset"]; exists && cfg.ReplSet == "" {
+		return fmt.Errorf("%w: -replset flag is required", ErrFlagRequired)
 	}
 
 	if cfg.OutDir == "" {
@@ -80,6 +86,8 @@ func renderGraphGroup(cfg *LumoConfig, graphGroup string) {
 }
 
 func renderGraph(cfg *LumoConfig, graphConfig GraphConfig) {
+
+	zap.S().Debugf("Generating graph '%s'", graphConfig.Title)
 
 	graphConfig.Title = interpolateGraphConfig(graphConfig.Title, cfg)
 	outputFile := graphOutputPath(cfg.OutDir, graphConfig.Title)
@@ -120,7 +128,7 @@ func validateGetGraphsFlags(cfg *LumoConfig) error {
 		return fmt.Errorf("%w: -token flag is required", ErrFlagRequired)
 	}
 
-	if cfg.Groups == "" {
+	if len(cfg.Groups) == 0 {
 		return fmt.Errorf("%w: -groups flag is required", ErrFlagRequired)
 	}
 

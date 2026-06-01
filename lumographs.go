@@ -518,7 +518,7 @@ var LumoGraphs = map[string][]GraphConfig{
 			Series: []SeriesConfig{
 				{
 					Legend: "{{state}}",
-					Expr:   "avg by (service_name,state) (rate(mongodb_mongod_metrics_query_executor_total{service_name=~\"$service_name\"}[$interval]) or  irate(mongodb_mongod_metrics_query_executor_total{service_name=~\"$service_name\"}[5m]))",
+					Expr:   "avg by (service_name) (rate(mongodb_mongod_metrics_query_executor_total{service_name=~\"$service_name\"}[$interval]) or  irate(mongodb_mongod_metrics_query_executor_total{service_name=~\"$service_name\"}[5m]))",
 				},
 				{
 					Legend: "moved",
@@ -1182,13 +1182,66 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"replset": {
 		{
+			Title: "Operation Latencies",
+			Group: "replset",
+			Unit:  "",
+			Series: []SeriesConfig{
+				{
+					Legend: "{{op_type}} - {{service_name}}",
+					Expr:   "avg by (op_type,service_name) (rate(mongodb_ss_opLatencies_latency{service_name=~\"$service_name\"}[$interval]) / (rate(mongodb_ss_opLatencies_ops{service_name=~\"$service_name\"}[$interval]) > 0) or irate(mongodb_ss_opLatencies_latency{service_name=~\"$service_name\"}[5m]) / (irate(mongodb_ss_opLatencies_ops{service_name=~\"$service_name\"}[5m]) > 0))",
+				},
+			},
+		},
+		{
+			Title: "Reads & Writes",
+			Group: "replset",
+			Unit:  "",
+			Series: []SeriesConfig{
+				{
+					Legend: "Active Readers - {{service_name}}",
+					Expr:   "avg by(service_name) (mongodb_ss_globalLock_activeClients_readers{service_name=~\"$service_name\"})",
+				},
+				{
+					Legend: "Active Writers - {{service_name}}",
+					Expr:   "avg by(service_name) (mongodb_ss_globalLock_activeClients_writers{service_name=~\"$service_name\"})",
+				},
+				{
+					Legend: "Queued Readers - {{service_name}}",
+					Expr:   "avg by(service_name) (mongodb_ss_globalLock_currentQueue{service_name=~\"$service_name\",count_type=\"readers\"})",
+				},
+				{
+					Legend: "Queued Writers - {{service_name}}",
+					Expr:   "avg by(service_name) (mongodb_ss_globalLock_currentQueue{service_name=~\"$service_name\",count_type=\"writers\"})",
+				},
+			},
+		},
+		{
+			Title: "Average Connections",
+			Group: "replset",
+			Unit:  "",
+			Series: []SeriesConfig{
+				{
+					Legend: "Current - {{service_name}}",
+					Expr:   "avg by (service_name) (mongodb_ss_connections{service_name=~\"$service_name\",conn_type=~\"current\"})",
+				},
+				{
+					Legend: "Available - {{service_name}}",
+					Expr:   "avg by(service_name) (mongodb_ss_connections{service_name=~\"$service_name\",conn_type=~\"available\"})",
+				},
+				{
+					Legend: "Idle - {{service_name}}",
+					Expr:   "avg by(service_name) (mongodb_ss_connections{conn_type=~\"current\", service_name=~\"$service_name\"}) - avg by(service_name) (mongodb_ss_connections{conn_type=~\"active\", service_name=~\"$service_name\"})",
+				},
+			},
+		},
+		{
 			Title: "Replication Lag",
 			Group: "replset",
 			Unit:  "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
-					Expr:   "max_over_time(mongodb_mongod_replset_member_replication_lag{environment=~\"$environment\",cluster=~\"$cluster\",set=\"$rs_nm\",self=~\"|1\",service_name=~\"$secondary\"}[$interval]) > 0 ",
+					Expr:   "max_over_time(mongodb_mongod_replset_member_replication_lag{environment=~\".*\",cluster=~\"$cluster\",set=\"$rs_nm\",self=~\"|1\",service_name=~\"$secondary\"}[$interval]) > 0 ",
 				},
 			},
 		},
@@ -1203,8 +1256,64 @@ var LumoGraphs = map[string][]GraphConfig{
 				},
 			},
 		},
+		{
+			Title: "Flow Control",
+			Group: "replset",
+			Unit:  "",
+			Series: []SeriesConfig{
+				{
+					Legend: "fc_count",
+					Expr:   "max by ()(rate(mongodb_ss_flowControl_isLaggedCount{service_name=~\"$service_name\"}[$interval]))",
+				},
+				{
+					Legend: "fc_time",
+					Expr:   "max by ()(rate(mongodb_ss_flowControl_isLaggedTimeMicros{service_name=~\"$service_name\"}[$interval]))",
+				},
+			},
+		},
+		{
+			Title: "Oplog GB/Hour - $service_name",
+			Group: "replset",
+			Unit:  "",
+			Series: []SeriesConfig{
+				{
+					Legend: "{{service_name}}",
+					Expr:   "sum(increase(mongodb_oplog_stats_wt_cache_bytes_written_from_cache{service_name=~\"$service_name\"}[1h]))",
+				},
+			},
+		},
 	},
 	"sharding": {
+		{
+			Title: "Command Operations",
+			Group: "sharding",
+			Unit:  "",
+			Series: []SeriesConfig{
+				{
+					Legend: "repl_{{legacy_op_type}}",
+					Expr:   "sum by (environment, cluster, legacy_op_type) (rate(mongodb_ss_opcountersRepl{environment=~\".*\", cluster=~\"$cluster\", rs_nm=~\"$set\", service_name=~\"$service_name\",legacy_op_type!~\"(command|query|getmore)\"}[$interval]))",
+				},
+				{
+					Legend: "ttl_delete",
+					Expr:   "sum by (environment, cluster) (rate(mongodb_ss_metrics_ttl_deletedDocuments{environment=~\".*\", rs_nm=~\"$set\",service_name=~\"$service_name\",cluster=~\"$cluster\"}[$interval]))",
+				},
+				{
+					Legend: "{{legacy_op_type}}",
+					Expr:   "sum by (environment, cluster, legacy_op_type) (rate(mongodb_ss_opcounters{environment=~\".*\", cluster=~\"$cluster\", rs_nm=~\"$set\",service_name=~\"$service_name\",legacy_op_type!=\"command\"}[$interval]))",
+				},
+			},
+		},
+		{
+			Title: "Operation Latencies",
+			Group: "sharding",
+			Unit:  "",
+			Series: []SeriesConfig{
+				{
+					Legend: "{{op_type}}",
+					Expr:   "avg by (op_type) (rate(mongodb_ss_opLatencies_latency{environment=~\".*\", cluster=~\"$cluster\", service_name=~\"$service_name\"}[$interval]) / (rate(mongodb_ss_opLatencies_ops{environment=~\".*\", cluster=~\"$cluster\", service_name=~\"$service_name\"}[$interval]) > 0) or irate(mongodb_ss_opLatencies_latency{environment=~\".*\", cluster=~\"$cluster\",service_name=~\"$service_name\"}[5m]) / (irate(mongodb_ss_opLatencies_ops{environment=~\".*\", cluster=~\"$cluster\", service_name=~\"$service_name\"}[5m]) > 0))",
+				},
+			},
+		},
 		{
 			Title: "Operations Per Shard",
 			Group: "sharding",
@@ -1212,7 +1321,7 @@ var LumoGraphs = map[string][]GraphConfig{
 			Series: []SeriesConfig{
 				{
 					Legend: "{{set}}",
-					Expr:   "sum(sum(rate(mongodb_op_counters_total{environment=~\"$environment\", cluster=~\"$cluster\", rs_nm=~\"$set\", service_name=~\"$service_name\", type!=\"command\"}[$interval]) or  irate(mongodb_op_counters_total{environment=~\"$environment\", cluster=~\"$cluster\", rs_nm=~\"$set\", service_name=~\"$service_name\", type!=\"command\"}[5m])) by (instance) * on (instance)  group_right mongodb_mongod_replset_my_state{environment=~\"$environment\", cluster=~\"$cluster\", set=~\"$set\", service_name=~\"$service_name\"} / mongodb_mongod_replset_my_state{environment=~\"$environment\", cluster=~\"$cluster\", set=~\"$set\", service_name=~\"$service_name\"}) by (set)",
+					Expr:   "sum(sum(rate(mongodb_op_counters_total{environment=~\".*\", cluster=~\"$cluster\", rs_nm=~\"$set\", service_name=~\"$service_name\", type!=\"command\"}[$interval]) or  irate(mongodb_op_counters_total{environment=~\".*\", cluster=~\"$cluster\", rs_nm=~\"$set\", service_name=~\"$service_name\", type!=\"command\"}[5m])) by (instance) * on (instance)  group_right mongodb_mongod_replset_my_state{environment=~\".*\", cluster=~\"$cluster\", set=~\"$set\", service_name=~\"$service_name\"} / mongodb_mongod_replset_my_state{environment=~\".*\", cluster=~\"$cluster\", set=~\"$set\", service_name=~\"$service_name\"}) by (set)",
 				},
 			},
 		},
@@ -1223,7 +1332,7 @@ var LumoGraphs = map[string][]GraphConfig{
 			Series: []SeriesConfig{
 				{
 					Legend: "{{rs_nm}}",
-					Expr:   "avg by (rs_nm) (mongodb_connections{environment=~\"$environment\", cluster=~\"$cluster\", rs_nm=~\"$set\", service_name=~\"$service_name\", state=\"current\", rs_nm!=\"\"})",
+					Expr:   "avg by (rs_nm) (mongodb_connections{environment=~\".*\", cluster=~\"$cluster\", rs_nm=~\"$set\", service_name=~\"$service_name\", state=\"current\", rs_nm!=\"\"})",
 				},
 			},
 		},
@@ -1234,7 +1343,7 @@ var LumoGraphs = map[string][]GraphConfig{
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
-					Expr:   "sum by (set) (avg by (service_name,set) (mongodb_connections{environment=~\"$environment\", cluster=~\"$cluster\", rs_nm=~\"$set\", service_name=~\"$service_name\", state=\"available\"}) * on (service_name) group_right avg by (service_name,set) (mongodb_mongod_replset_my_state{environment=~\"$environment\", cluster=~\"$cluster\", set=~\"$set\", service_name=~\"$service_name\"}/ mongodb_mongod_replset_my_state{cluster=\"$cluster\"}))",
+					Expr:   "sum by (set) (avg by (service_name,set) (mongodb_connections{environment=~\".*\", cluster=~\"$cluster\", rs_nm=~\"$set\", service_name=~\"$service_name\", state=\"available\"}) * on (service_name) group_right avg by (service_name,set) (mongodb_mongod_replset_my_state{environment=~\".*\", cluster=~\"$cluster\", set=~\"$set\", service_name=~\"$service_name\"}/ mongodb_mongod_replset_my_state{cluster=\"$cluster\"}))",
 				},
 			},
 		},
@@ -1246,6 +1355,76 @@ var LumoGraphs = map[string][]GraphConfig{
 				{
 					Legend: "{{shard}}",
 					Expr:   "avg by (shard) (rate(mongodb_mongos_sharding_shard_chunks_total{cluster=\"$cluster\"}[$interval]) or irate(mongodb_mongos_sharding_shard_chunks_total{cluster=\"$cluster\"}[5m]))",
+				},
+			},
+		},
+		{
+			Title: "Chunks Move Events",
+			Group: "sharding",
+			Unit:  "",
+			Series: []SeriesConfig{
+				{
+					Legend: "{{event}}",
+					Expr:   "avg by (event) (rate(mongodb_mongos_sharding_changelog_10min_total{cluster=\"$cluster\", event=~\".*moveChunk.*\"}[$interval]) or irate(mongodb_mongos_sharding_changelog_10min_total{cluster=\"$cluster\", event=~\".*moveChunk.*\"}[5m]))",
+				},
+			},
+		},
+		{
+			Title: "Chunks Split Events",
+			Group: "sharding",
+			Unit:  "",
+			Series: []SeriesConfig{
+				{
+					Legend: "{{event}}",
+					Expr:   "avg by (event) (rate(mongodb_mongos_sharding_changelog_10min_total{cluster=\"$cluster\", event=~\".*split.*\"}[$interval]) or irate(mongodb_mongos_sharding_changelog_10min_total{cluster=\"$cluster\", event=~\".*split.*\"}[5m]))",
+				},
+			},
+		},
+		{
+			Title: "Replication Lag by Shard",
+			Group: "sharding",
+			Unit:  "",
+			Series: []SeriesConfig{
+				{
+					Legend: "__auto",
+					Expr:   "max by (set) (max(max_over_time(mongodb_mongod_replset_member_replication_lag{cluster=\"$cluster\",state!=\"ARBITER\"}[$interval])) by (service_name,set) or max(max_over_time(mongodb_mongod_replset_member_replication_lag{cluster=\"$cluster\",state!=\"ARBITER\"}[5m])) by (service_name,set))",
+				},
+			},
+		},
+		{
+			Title: "Oplog Range by Shard",
+			Group: "sharding",
+			Unit:  "",
+			Series: []SeriesConfig{
+				{
+					Legend: "{{set}}",
+					Expr:   "max(max(mongodb_mongod_replset_oplog_head_timestamp{cluster=\"$cluster\"}-mongodb_mongod_replset_oplog_tail_timestamp{cluster=\"$cluster\"}) by (service_name) * on (service_name) group_right mongodb_mongod_replset_my_state{cluster=\"$cluster\"} / mongodb_mongod_replset_my_state{cluster=\"$cluster\"}) by (set)",
+				},
+			},
+		},
+		{
+			Title: "Flow Control",
+			Group: "sharding",
+			Unit:  "",
+			Series: []SeriesConfig{
+				{
+					Legend: "fc_count",
+					Expr:   "max by ()(rate(mongodb_ss_flowControl_isLaggedCount{service_name=~\"$service_name\"}[$interval]))",
+				},
+				{
+					Legend: "fc_time",
+					Expr:   "max by ()(rate(mongodb_ss_flowControl_isLaggedTimeMicros{service_name=~\"$service_name\"}[$interval]))",
+				},
+			},
+		},
+		{
+			Title: "Oplog GB/Hour - $service_name",
+			Group: "sharding",
+			Unit:  "",
+			Series: []SeriesConfig{
+				{
+					Legend: "{{service_name}}",
+					Expr:   "sum(increase(mongodb_oplog_stats_wt_cache_bytes_written_from_cache{service_name=~\"$service_name\"}[1h]))",
 				},
 			},
 		},

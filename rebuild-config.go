@@ -265,6 +265,9 @@ func mapGrafanaToLumo(dash YamlDashboard, grafanaDash *GrafanaDashboard) []Graph
 				cleanExpr := strings.ReplaceAll(t.Expr, "\n", " ")
 				cleanExpr = strings.ReplaceAll(cleanExpr, "\r", "")
 
+				// Replace some PromQL variables that don't matter to us
+				cleanExpr = strings.ReplaceAll(cleanExpr, "$environment", ".*")
+
 				series = append(series, SeriesConfig{
 					Legend: t.LegendFormat,
 					Expr:   cleanExpr,

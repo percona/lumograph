@@ -77,9 +77,16 @@ func interpolateGraphConfig(s string, cfg *LumoConfig) string {
 		s = strings.ReplaceAll(s, "$node_name", cfg.Node)
 	}
 
+	// For Async, PXC, GR, and MongoDB clusters
 	if cfg.ClusterName != "" {
 		s = strings.ReplaceAll(s, "$cluster", cfg.ClusterName)
 		s = strings.ReplaceAll(s, "$replication_set", cfg.ClusterName)
+	}
+
+	// For MongoDB replica sets
+	if cfg.ReplSet != "" {
+		s = strings.ReplaceAll(s, "$set", cfg.ReplSet)
+		s = strings.ReplaceAll(s, "$rs_nm", cfg.ReplSet)
 	}
 
 	// For PGSQL group
