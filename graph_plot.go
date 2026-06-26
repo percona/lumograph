@@ -13,7 +13,11 @@ import (
 	"gonum.org/v1/plot/vg/draw"
 )
 
-const legendPadding = 8
+const (
+	legendPadding = 8
+
+	ops_str = "ops"
+)
 
 // Palette is a slice of Color{}s derived from Grafana's "classic" palette
 var Palette = []color.Color{
@@ -101,6 +105,7 @@ func (t CustomYTicker) Ticks(minVal, maxVal float64) []plot.Tick {
 		absVal := math.Abs(val)
 
 		var labelStr string
+
 		switch {
 		case absVal >= 1000000:
 			labelStr = fmt.Sprintf("%.1fM", val/1000000)
@@ -112,7 +117,7 @@ func (t CustomYTicker) Ticks(minVal, maxVal float64) []plot.Tick {
 			labelStr = fmt.Sprintf("%.0f", val)
 		}
 
-		if t.Unit == "ops" {
+		if t.Unit == ops_str {
 			labelStr += " ops/s"
 		}
 

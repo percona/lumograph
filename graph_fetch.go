@@ -77,6 +77,7 @@ func fetchSeries(lumoConfig *LumoConfig, expr, legend string) (*VMResponse, erro
 
 	// Unmarshal the response body into a VMResponse struct
 	var vmResp VMResponse
+
 	if err := json.Unmarshal(body, &vmResp); err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrParsingJSON, err)
 	}

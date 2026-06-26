@@ -108,6 +108,7 @@ linters:
       default: all
       disable:
         - assign-exclusive
+        - after-expr
         - leading-whitespace
         - trailing-whitespace
 
