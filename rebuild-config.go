@@ -22,7 +22,7 @@ import (
 )
 
 // Base URL for downloading grafana dashboard definitions for PMM
-const pmmBaseURL = "https://raw.githubusercontent.com/percona/pmm/refs/heads/v3/dashboards/dashboards/"
+const pmmBaseURL = "https://raw.githubusercontent.com/percona/pmm/refs/tags/v3.8.1/dashboards/dashboards/"
 
 var (
 	ErrUnexpectedHTTPStatus = errors.New("unexpected HTTP status")
