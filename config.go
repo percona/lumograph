@@ -25,6 +25,7 @@ type LumoConfig struct {
 	End         time.Time
 	Token       string
 	Debug       bool
+	InsecureTLS bool
 }
 
 const (
@@ -71,6 +72,8 @@ func parseFlags() (string, LumoConfig) {
 
 	initLogger(cfg.Debug)
 
+	configureHTTPClient(cfg.InsecureTLS)
+
 	if command == getGraphsCommand || command == listServicesCommand {
 		cfg.Token = resolveToken(cfg.Token)
 	}
@@ -102,12 +105,15 @@ func setupFlagSets(cfg *LumoConfig, startStr, endStr, groupsStr *string) (*flag.
 	getGraphsCmd.StringVar(endStr, "end", "", "End time (YYYY-MM-DD HH:MM:SS, defaults to now)")
 	getGraphsCmd.StringVar(&cfg.Token, "token", "", "PMM API token (can also use PMM_TOKEN env var)")
 	getGraphsCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
+	getGraphsCmd.BoolVar(&cfg.InsecureTLS, "insecure-tls", false, "Disable TLS certificate verification (for self-signed certs)")
 
 	listGroupsCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
+	listGroupsCmd.BoolVar(&cfg.InsecureTLS, "insecure-tls", false, "Disable TLS certificate verification (for self-signed certs)")
 
 	listServicesCmd.StringVar(&cfg.Endpoint, "endpoint", "", "PMM endpoint URL (required)")
 	listServicesCmd.StringVar(&cfg.Token, "token", "", "Service account PMM API token (can also use PMM_TOKEN env var)")
 	listServicesCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
+	listServicesCmd.BoolVar(&cfg.InsecureTLS, "insecure-tls", false, "Disable TLS certificate verification (for self-signed certs)")
 
 	return getGraphsCmd, listGroupsCmd, listServicesCmd
 }

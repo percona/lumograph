@@ -52,7 +52,7 @@ func getPmmServices(endpoint, token string, debug bool) ([]PMMService, error) {
 		}
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrFetchServices, err)
 	}
