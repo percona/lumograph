@@ -92,5 +92,7 @@ jobs:
           cp dist/* "releases/${GITHUB_REF_NAME}/"
           sed -i "s/releases\/v.*\/lumograph-/releases\/${GITHUB_REF_NAME}\/lumograph-/g" index.html
           git add index.html "releases/${GITHUB_REF_NAME}"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
           git commit -am "Add Lumograph release ${GITHUB_REF_NAME}"
           git push
