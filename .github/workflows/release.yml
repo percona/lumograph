@@ -88,6 +88,7 @@ jobs:
         run: |
           git fetch origin gh-pages --depth 1
           git checkout --progress --force -B gh-pages refs/remotes/origin/gh-pages
+          mkdir -p "releases/${GITHUB_REF_NAME}"
           cp dist/* "releases/${GITHUB_REF_NAME}/"
           sed -i "s/releases\/v.*\/lumograph-/releases\/${GITHUB_REF_NAME}\/lumograph-/g" index.html
           git add index.html "releases/${GITHUB_REF_NAME}"
