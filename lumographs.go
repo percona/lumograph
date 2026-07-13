@@ -5,9 +5,9 @@ package main
 var LumoGraphs = map[string][]GraphConfig{
 	"async": {
 		{
-			Title: "MySQL replication lag",
-			Group: "async",
-			Unit:  "",
+			Title:  "MySQL replication lag",
+			Groups: []string{"async"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -18,9 +18,9 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"aurora": {
 		{
-			Title: "Amazon Aurora Transaction Commits",
-			Group: "aurora",
-			Unit:  "ops",
+			Title:  "Amazon Aurora Transaction Commits",
+			Groups: []string{"aurora"},
+			Unit:   "ops",
 			Series: []SeriesConfig{
 				{
 					Legend: "Number of Amazon Aurora Commits ",
@@ -33,9 +33,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Amazon Aurora Load",
-			Group: "aurora",
-			Unit:  "short",
+			Title:  "Amazon Aurora Load",
+			Groups: []string{"aurora"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Write Transaction Commit Load",
@@ -64,9 +64,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Aurora Memory Used",
-			Group: "aurora",
-			Unit:  "bytes",
+			Title:  "Aurora Memory Used",
+			Groups: []string{"aurora"},
+			Unit:   "bytes",
 			Series: []SeriesConfig{
 				{
 					Legend: "Aurora Lock Manager Memory",
@@ -79,9 +79,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Amazon Aurora Statement Latency",
-			Group: "aurora",
-			Unit:  "µs",
+			Title:  "Amazon Aurora Statement Latency",
+			Groups: []string{"aurora"},
+			Unit:   "µs",
 			Series: []SeriesConfig{
 				{
 					Legend: "DDL Latency",
@@ -106,9 +106,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Amazon Aurora Special Command Counters",
-			Group: "aurora",
-			Unit:  "ops",
+			Title:  "Amazon Aurora Special Command Counters",
+			Groups: []string{"aurora"},
+			Unit:   "ops",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{command}}",
@@ -117,9 +117,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Amazon Aurora Problems",
-			Group: "aurora",
-			Unit:  "ops",
+			Title:  "Amazon Aurora Problems",
+			Groups: []string{"aurora"},
+			Unit:   "ops",
 			Series: []SeriesConfig{
 				{
 					Legend: "Thread Deadlocks",
@@ -138,9 +138,9 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"gr": {
 		{
-			Title: "Replication Lag",
-			Group: "gr",
-			Unit:  "s",
+			Title:  "Replication Lag",
+			Groups: []string{"gr"},
+			Unit:   "s",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -149,9 +149,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Replication Delay",
-			Group: "gr",
-			Unit:  "s",
+			Title:  "Replication Delay",
+			Groups: []string{"gr"},
+			Unit:   "s",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -160,9 +160,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Transactions in the Queue for Checking",
-			Group: "gr",
-			Unit:  "short",
+			Title:  "Transactions in the Queue for Checking",
+			Groups: []string{"gr"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -173,9 +173,9 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"innodb": {
 		{
-			Title: "InnoDB Row Reads",
-			Group: "innodb",
-			Unit:  "short",
+			Title:  "InnoDB Row Reads",
+			Groups: []string{"innodb"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Rows {{ operation }}",
@@ -184,9 +184,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "InnoDB Row Writes",
-			Group: "innodb",
-			Unit:  "short",
+			Title:  "InnoDB Row Writes",
+			Groups: []string{"innodb"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Rows {{ operation }}",
@@ -195,9 +195,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "InnoDB Data I/O",
-			Group: "innodb",
-			Unit:  "ops",
+			Title:  "InnoDB Data I/O",
+			Groups: []string{"innodb"},
+			Unit:   "ops",
 			Series: []SeriesConfig{
 				{
 					Legend: "Data Reads",
@@ -214,9 +214,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "InnoDB FSyncs",
-			Group: "innodb",
-			Unit:  "ops",
+			Title:  "InnoDB FSyncs",
+			Groups: []string{"innodb"},
+			Unit:   "ops",
 			Series: []SeriesConfig{
 				{
 					Legend: "Data Fsyncs",
@@ -229,9 +229,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "InnoDB Pending IO",
-			Group: "innodb",
-			Unit:  "short",
+			Title:  "InnoDB Pending IO",
+			Groups: []string{"innodb"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Pending Data Reads",
@@ -248,9 +248,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "InnoDB IO Targets Bandwidth",
-			Group: "innodb",
-			Unit:  "Bps",
+			Title:  "InnoDB IO Targets Bandwidth",
+			Groups: []string{"innodb"},
+			Unit:   "Bps",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{event_name}} ",
@@ -259,9 +259,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "InnoDB Buffer Pool Page Activity",
-			Group: "innodb",
-			Unit:  "ops",
+			Title:  "InnoDB Buffer Pool Page Activity",
+			Groups: []string{"innodb"},
+			Unit:   "ops",
 			Series: []SeriesConfig{
 				{
 					Legend: "Pages Created",
@@ -278,9 +278,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "InnoDB Buffer Pool Requests",
-			Group: "innodb",
-			Unit:  "ops",
+			Title:  "InnoDB Buffer Pool Requests",
+			Groups: []string{"innodb"},
+			Unit:   "ops",
 			Series: []SeriesConfig{
 				{
 					Legend: "Read Requests",
@@ -293,9 +293,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "InnoDB Checkpoint Age",
-			Group: "innodb",
-			Unit:  "bytes",
+			Title:  "InnoDB Checkpoint Age",
+			Groups: []string{"innodb"},
+			Unit:   "bytes",
 			Series: []SeriesConfig{
 				{
 					Legend: "Uncheckpointed Bytes",
@@ -308,9 +308,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "InnoDB Log File Usage Hourly",
-			Group: "innodb",
-			Unit:  "bytes",
+			Title:  "InnoDB Log File Usage Hourly",
+			Groups: []string{"innodb"},
+			Unit:   "bytes",
 			Series: []SeriesConfig{
 				{
 					Legend: "Data Written to Log Files",
@@ -323,9 +323,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "InnoDB Row Lock Wait Activity",
-			Group: "innodb",
-			Unit:  "short",
+			Title:  "InnoDB Row Lock Wait Activity",
+			Groups: []string{"innodb"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Deadlocks",
@@ -342,9 +342,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Transaction History",
-			Group: "innodb",
-			Unit:  "short",
+			Title:  "Transaction History",
+			Groups: []string{"innodb"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Transaction History Length",
@@ -357,9 +357,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "InnoDB AHI Usage",
-			Group: "innodb",
-			Unit:  "short",
+			Title:  "InnoDB AHI Usage",
+			Groups: []string{"innodb"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "AHI - Total Searches",
@@ -372,9 +372,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "InnoDB AHI Miss Ratio",
-			Group: "innodb",
-			Unit:  "percentunit",
+			Title:  "InnoDB AHI Miss Ratio",
+			Groups: []string{"innodb"},
+			Unit:   "percentunit",
 			Series: []SeriesConfig{
 				{
 					Legend: "AHI - Miss Ratio",
@@ -383,9 +383,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "InnoDB Contention - OS Waits",
-			Group: "innodb",
-			Unit:  "short",
+			Title:  "InnoDB Contention - OS Waits",
+			Groups: []string{"innodb"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "RW Locks S OS Waits",
@@ -402,9 +402,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "InnoDB Contention - Spin Rounds",
-			Group: "innodb",
-			Unit:  "short",
+			Title:  "InnoDB Contention - Spin Rounds",
+			Groups: []string{"innodb"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "RW Locks S Spin Rounds",
@@ -423,9 +423,9 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"mongo": {
 		{
-			Title: "Command Operations",
-			Group: "mongo",
-			Unit:  "",
+			Title:  "Command Operations",
+			Groups: []string{"mongo"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "repl_{{type}}",
@@ -442,9 +442,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Latency Detail",
-			Group: "mongo",
-			Unit:  "",
+			Title:  "Latency Detail",
+			Groups: []string{"mongo"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{type}}",
@@ -453,9 +453,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Connections",
-			Group: "mongo",
-			Unit:  "",
+			Title:  "Connections",
+			Groups: []string{"mongo"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Connections",
@@ -464,9 +464,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Cursors",
-			Group: "mongo",
-			Unit:  "",
+			Title:  "Cursors",
+			Groups: []string{"mongo"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{state}}",
@@ -475,9 +475,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Document Operations",
-			Group: "mongo",
-			Unit:  "",
+			Title:  "Document Operations",
+			Groups: []string{"mongo"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{state}}",
@@ -486,9 +486,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Queued Operations",
-			Group: "mongo",
-			Unit:  "",
+			Title:  "Queued Operations",
+			Groups: []string{"mongo"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{type}}",
@@ -497,9 +497,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Query Efficiency",
-			Group: "mongo",
-			Unit:  "",
+			Title:  "Query Efficiency",
+			Groups: []string{"mongo"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Document",
@@ -512,9 +512,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Scanned and Moved Objects",
-			Group: "mongo",
-			Unit:  "",
+			Title:  "Scanned and Moved Objects",
+			Groups: []string{"mongo"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{state}}",
@@ -529,9 +529,9 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"mysql": {
 		{
-			Title: "MySQL Connections",
-			Group: "mysql",
-			Unit:  "short",
+			Title:  "MySQL Connections",
+			Groups: []string{"mysql"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Connections",
@@ -548,9 +548,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "MySQL Aborted Connections",
-			Group: "mysql",
-			Unit:  "ops",
+			Title:  "MySQL Aborted Connections",
+			Groups: []string{"mysql"},
+			Unit:   "ops",
 			Series: []SeriesConfig{
 				{
 					Legend: "Aborted Connects (attempts)",
@@ -563,9 +563,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "MySQL Client Thread Activity",
-			Group: "mysql",
-			Unit:  "short",
+			Title:  "MySQL Client Thread Activity",
+			Groups: []string{"mysql"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Peak Threads Connected",
@@ -582,9 +582,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "MySQL Temporary Objects",
-			Group: "mysql",
-			Unit:  "short",
+			Title:  "MySQL Temporary Objects",
+			Groups: []string{"mysql"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Created Tmp Tables",
@@ -601,9 +601,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "MySQL Select Types",
-			Group: "mysql",
-			Unit:  "ops",
+			Title:  "MySQL Select Types",
+			Groups: []string{"mysql"},
+			Unit:   "ops",
 			Series: []SeriesConfig{
 				{
 					Legend: "Select Full Join",
@@ -628,9 +628,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "MySQL Sorts",
-			Group: "mysql",
-			Unit:  "ops",
+			Title:  "MySQL Sorts",
+			Groups: []string{"mysql"},
+			Unit:   "ops",
 			Series: []SeriesConfig{
 				{
 					Legend: "Sort Rows",
@@ -651,9 +651,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "MySQL Questions",
-			Group: "mysql",
-			Unit:  "short",
+			Title:  "MySQL Questions",
+			Groups: []string{"mysql"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Questions",
@@ -662,9 +662,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Top Command Counters",
-			Group: "mysql",
-			Unit:  "short",
+			Title:  "Top Command Counters",
+			Groups: []string{"mysql"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Com_{{ command }}",
@@ -673,9 +673,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "MySQL Handlers",
-			Group: "mysql",
-			Unit:  "ops",
+			Title:  "MySQL Handlers",
+			Groups: []string{"mysql"},
+			Unit:   "ops",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{ handler }}",
@@ -684,9 +684,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "MySQL Query Cache Activity",
-			Group: "mysql",
-			Unit:  "short",
+			Title:  "MySQL Query Cache Activity",
+			Groups: []string{"mysql"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Hits",
@@ -711,9 +711,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "MySQL Table Open Cache Status",
-			Group: "mysql",
-			Unit:  "ops",
+			Title:  "MySQL Table Open Cache Status",
+			Groups: []string{"mysql"},
+			Unit:   "ops",
 			Series: []SeriesConfig{
 				{
 					Legend: "Openings",
@@ -738,9 +738,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "MySQL Open Tables",
-			Group: "mysql",
-			Unit:  "short",
+			Title:  "MySQL Open Tables",
+			Groups: []string{"mysql"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Open Tables",
@@ -753,9 +753,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "MySQL Table Definition Cache",
-			Group: "mysql",
-			Unit:  "short",
+			Title:  "MySQL Table Definition Cache",
+			Groups: []string{"mysql"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Open Table Definitions",
@@ -774,9 +774,9 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"os": {
 		{
-			Title: "CPU Usage",
-			Group: "os",
-			Unit:  "",
+			Title:  "CPU Usage",
+			Groups: []string{"os"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{ mode }}",
@@ -789,9 +789,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "CPU Saturation and Max Core Usage",
-			Group: "os",
-			Unit:  "",
+			Title:  "CPU Saturation and Max Core Usage",
+			Groups: []string{"os"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Normalized CPU Load",
@@ -808,9 +808,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Memory Utilization",
-			Group: "os",
-			Unit:  "",
+			Title:  "Memory Utilization",
+			Groups: []string{"os"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Free",
@@ -835,9 +835,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Swap Activity",
-			Group: "os",
-			Unit:  "",
+			Title:  "Swap Activity",
+			Groups: []string{"os"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Swap In (Reads)",
@@ -854,9 +854,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "I/O Activity",
-			Group: "os",
-			Unit:  "",
+			Title:  "I/O Activity",
+			Groups: []string{"os"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Disk Reads (Page In)",
@@ -873,9 +873,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Disk IO Latency",
-			Group: "os",
-			Unit:  "",
+			Title:  "Disk IO Latency",
+			Groups: []string{"os"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Read Latency",
@@ -896,9 +896,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Network Traffic",
-			Group: "os",
-			Unit:  "",
+			Title:  "Network Traffic",
+			Groups: []string{"os"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Inbound",
@@ -913,9 +913,9 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"pgsql": {
 		{
-			Title: "Number of Locks",
-			Group: "pgsql",
-			Unit:  "",
+			Title:  "Number of Locks",
+			Groups: []string{"pgsql"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{mode}} - {{datname}}",
@@ -924,9 +924,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Tuples",
-			Group: "pgsql",
-			Unit:  "",
+			Title:  "Tuples",
+			Groups: []string{"pgsql"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Fetched",
@@ -951,9 +951,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Read Tuple Activity",
-			Group: "pgsql",
-			Unit:  "",
+			Title:  "Read Tuple Activity",
+			Groups: []string{"pgsql"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Rows returned by queries",
@@ -966,9 +966,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Tuples Changes by Queries",
-			Group: "pgsql",
-			Unit:  "",
+			Title:  "Tuples Changes by Queries",
+			Groups: []string{"pgsql"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Rows inserted by queries",
@@ -985,9 +985,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Transactions",
-			Group: "pgsql",
-			Unit:  "",
+			Title:  "Transactions",
+			Groups: []string{"pgsql"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Commits",
@@ -1000,9 +1000,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Duration of Transactions",
-			Group: "pgsql",
-			Unit:  "",
+			Title:  "Duration of Transactions",
+			Groups: []string{"pgsql"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{state}}",
@@ -1011,9 +1011,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Number of Temp Files",
-			Group: "pgsql",
-			Unit:  "",
+			Title:  "Number of Temp Files",
+			Groups: []string{"pgsql"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{datname}}",
@@ -1022,9 +1022,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Size of Temp Files",
-			Group: "pgsql",
-			Unit:  "",
+			Title:  "Size of Temp Files",
+			Groups: []string{"pgsql"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{datname}}",
@@ -1037,9 +1037,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Temp Files Activity",
-			Group: "pgsql",
-			Unit:  "",
+			Title:  "Temp Files Activity",
+			Groups: []string{"pgsql"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{datname}}",
@@ -1048,9 +1048,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Temp Files Utilization",
-			Group: "pgsql",
-			Unit:  "",
+			Title:  "Temp Files Utilization",
+			Groups: []string{"pgsql"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{datname}}",
@@ -1059,9 +1059,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Conflicts/Deadlocks",
-			Group: "pgsql",
-			Unit:  "",
+			Title:  "Conflicts/Deadlocks",
+			Groups: []string{"pgsql"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Deadlocks",
@@ -1074,9 +1074,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Number of Locks",
-			Group: "pgsql",
-			Unit:  "",
+			Title:  "Number of Locks",
+			Groups: []string{"pgsql"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{mode}} - {{datname}}",
@@ -1087,9 +1087,9 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"pxc": {
 		{
-			Title: "Percona XtraDB / Galera Cluster Size",
-			Group: "pxc",
-			Unit:  "short",
+			Title:  "Percona XtraDB / Galera Cluster Size",
+			Groups: []string{"pxc"},
+			Unit:   "short",
 			Series: []SeriesConfig{
 				{
 					Legend: "Size",
@@ -1098,9 +1098,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Flow Control Paused Time",
-			Group: "pxc",
-			Unit:  "",
+			Title:  "Flow Control Paused Time",
+			Groups: []string{"pxc"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{ service_name }}",
@@ -1109,9 +1109,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Flow Control Messages Sent",
-			Group: "pxc",
-			Unit:  "",
+			Title:  "Flow Control Messages Sent",
+			Groups: []string{"pxc"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{ service_name }}",
@@ -1120,9 +1120,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Average Galera Replication Latency",
-			Group: "pxc",
-			Unit:  "",
+			Title:  "Average Galera Replication Latency",
+			Groups: []string{"pxc"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}} - Latency Average",
@@ -1131,9 +1131,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Galera Flow Control",
-			Group: "pxc",
-			Unit:  "",
+			Title:  "Galera Flow Control",
+			Groups: []string{"pxc"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "FC Messages Received",
@@ -1150,9 +1150,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Available Downtime before SST Required",
-			Group: "pxc",
-			Unit:  "s",
+			Title:  "Available Downtime before SST Required",
+			Groups: []string{"pxc"},
+			Unit:   "s",
 			Series: []SeriesConfig{
 				{
 					Legend: "Time (1h avg)",
@@ -1165,9 +1165,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Galera Writeset Traffic",
-			Group: "pxc",
-			Unit:  "",
+			Title:  "Galera Writeset Traffic",
+			Groups: []string{"pxc"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Inbound",
@@ -1182,9 +1182,9 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"replset": {
 		{
-			Title: "Operation Latencies",
-			Group: "replset",
-			Unit:  "",
+			Title:  "Operation Latencies",
+			Groups: []string{"replset"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{op_type}} - {{service_name}}",
@@ -1193,9 +1193,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Reads & Writes",
-			Group: "replset",
-			Unit:  "",
+			Title:  "Reads & Writes",
+			Groups: []string{"replset"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Active Readers - {{service_name}}",
@@ -1216,9 +1216,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Average Connections",
-			Group: "replset",
-			Unit:  "",
+			Title:  "Average Connections",
+			Groups: []string{"replset"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Current - {{service_name}}",
@@ -1235,9 +1235,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Replication Lag",
-			Group: "replset",
-			Unit:  "",
+			Title:  "Replication Lag",
+			Groups: []string{"replset"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -1246,9 +1246,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Oplog Recovery Window",
-			Group: "replset",
-			Unit:  "",
+			Title:  "Oplog Recovery Window",
+			Groups: []string{"replset"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{ service_name }}",
@@ -1257,9 +1257,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Flow Control",
-			Group: "replset",
-			Unit:  "",
+			Title:  "Flow Control",
+			Groups: []string{"replset"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "fc_count",
@@ -1272,9 +1272,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Oplog GB/Hour - $service_name",
-			Group: "replset",
-			Unit:  "",
+			Title:  "Oplog GB/Hour - $service_name",
+			Groups: []string{"replset"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -1285,9 +1285,9 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"sharding": {
 		{
-			Title: "Command Operations",
-			Group: "sharding",
-			Unit:  "",
+			Title:  "Command Operations",
+			Groups: []string{"sharding"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "repl_{{legacy_op_type}}",
@@ -1304,9 +1304,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Operation Latencies",
-			Group: "sharding",
-			Unit:  "",
+			Title:  "Operation Latencies",
+			Groups: []string{"sharding"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{op_type}}",
@@ -1315,9 +1315,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Operations Per Shard",
-			Group: "sharding",
-			Unit:  "",
+			Title:  "Operations Per Shard",
+			Groups: []string{"sharding"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{set}}",
@@ -1326,9 +1326,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Current Connections Per Shard",
-			Group: "sharding",
-			Unit:  "",
+			Title:  "Current Connections Per Shard",
+			Groups: []string{"sharding"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{rs_nm}}",
@@ -1337,9 +1337,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Available Connections",
-			Group: "sharding",
-			Unit:  "",
+			Title:  "Available Connections",
+			Groups: []string{"sharding"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -1348,9 +1348,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Dynamic of Chunks",
-			Group: "sharding",
-			Unit:  "",
+			Title:  "Dynamic of Chunks",
+			Groups: []string{"sharding"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{shard}}",
@@ -1359,9 +1359,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Chunks Move Events",
-			Group: "sharding",
-			Unit:  "",
+			Title:  "Chunks Move Events",
+			Groups: []string{"sharding"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{event}}",
@@ -1370,9 +1370,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Chunks Split Events",
-			Group: "sharding",
-			Unit:  "",
+			Title:  "Chunks Split Events",
+			Groups: []string{"sharding"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{event}}",
@@ -1381,9 +1381,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Replication Lag by Shard",
-			Group: "sharding",
-			Unit:  "",
+			Title:  "Replication Lag by Shard",
+			Groups: []string{"sharding"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "__auto",
@@ -1392,9 +1392,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Oplog Range by Shard",
-			Group: "sharding",
-			Unit:  "",
+			Title:  "Oplog Range by Shard",
+			Groups: []string{"sharding"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{set}}",
@@ -1403,9 +1403,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Flow Control",
-			Group: "sharding",
-			Unit:  "",
+			Title:  "Flow Control",
+			Groups: []string{"sharding"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "fc_count",
@@ -1418,9 +1418,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Oplog GB/Hour - $service_name",
-			Group: "sharding",
-			Unit:  "",
+			Title:  "Oplog GB/Hour - $service_name",
+			Groups: []string{"sharding"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -1431,9 +1431,9 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"valkey": {
 		{
-			Title: "$service_name - Connected/Blocked Clients",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "$service_name - Connected/Blocked Clients",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Connected - {{service_name}}",
@@ -1446,9 +1446,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "$service_name - Client Buffers",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "$service_name - Client Buffers",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Input",
@@ -1461,9 +1461,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "$service_name - Total Commands/Sec",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "$service_name - Total Commands/Sec",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -1472,9 +1472,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "$service_name - Read and Write Rate",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "$service_name - Read and Write Rate",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Reads - {{service_name}}",
@@ -1487,9 +1487,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "$ns_service_name - Command by Type",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "$ns_service_name - Command by Type",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{cmd}} - {{ service_name}}",
@@ -1498,9 +1498,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "$ns_service_name - Total Time Spent by Command/Sec",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "$ns_service_name - Total Time Spent by Command/Sec",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{cmd}} - {{ service_name}}",
@@ -1509,9 +1509,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "$node_name - Total Commands/Sec",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "$node_name - Total Commands/Sec",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{node_name}}",
@@ -1520,9 +1520,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "$service_name - Read and Write Rate",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "$service_name - Read and Write Rate",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Reads - $service_name",
@@ -1535,9 +1535,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "$node_name - Commands by Type",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "$node_name - Commands by Type",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{cmd}} - {{service_name}}",
@@ -1546,9 +1546,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "$node_name - Hits/Misses per Sec",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "$node_name - Hits/Misses per Sec",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "hits - {{ service_name}}",
@@ -1561,9 +1561,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "IO thread Operations",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "IO thread Operations",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "reads - {{service_name}}",
@@ -1576,9 +1576,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "IO Threads Active",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "IO Threads Active",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -1587,9 +1587,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Memory Usage",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "Memory Usage",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -1598,9 +1598,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Total Memory Usage",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "Total Memory Usage",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "used, {{ service_name}}",
@@ -1613,9 +1613,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Expired/Evicted Keys",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "Expired/Evicted Keys",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "expired, {{ service_name}}",
@@ -1628,9 +1628,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Expiring vs Not-Expiring Keys",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "Expiring vs Not-Expiring Keys",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "not expiring, {{ service_name}}",
@@ -1643,9 +1643,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "$service_name - Network Input",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "$service_name - Network Input",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -1654,9 +1654,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "$service_name - Network Output",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "$service_name - Network Output",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -1665,9 +1665,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Total Memory Usage",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "Total Memory Usage",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Used",
@@ -1680,9 +1680,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Cumulative Network I/O",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "Cumulative Network I/O",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Input",
@@ -1695,9 +1695,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Base, Current, Last COW Size",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "Base, Current, Last COW Size",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -1714,9 +1714,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Slowlog Length",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "Slowlog Length",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -1725,9 +1725,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Slowlog",
-			Group: "valkey",
-			Unit:  "",
+			Title:  "Slowlog",
+			Groups: []string{"valkey"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "__auto",
@@ -1738,9 +1738,9 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"valkeycluster": {
 		{
-			Title: "Slots Status",
-			Group: "valkeycluster",
-			Unit:  "",
+			Title:  "Slots Status",
+			Groups: []string{"valkeycluster"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "ok - {{service_name}}",
@@ -1757,9 +1757,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "$service_name - Cluster State",
-			Group: "valkeycluster",
-			Unit:  "",
+			Title:  "$service_name - Cluster State",
+			Groups: []string{"valkeycluster"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -1768,9 +1768,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Cluster Messages",
-			Group: "valkeycluster",
-			Unit:  "",
+			Title:  "Cluster Messages",
+			Groups: []string{"valkeycluster"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Sent - {{service_name}}",
@@ -1783,9 +1783,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "$service_name - Cluster Connections",
-			Group: "valkeycluster",
-			Unit:  "",
+			Title:  "$service_name - Cluster Connections",
+			Groups: []string{"valkeycluster"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "__auto",
@@ -1794,9 +1794,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "$service_name - Known Nodes",
-			Group: "valkeycluster",
-			Unit:  "",
+			Title:  "$service_name - Known Nodes",
+			Groups: []string{"valkeycluster"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}",
@@ -1807,9 +1807,9 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"valkeyrepl": {
 		{
-			Title: "$service_name - Replica vs Master Offsets",
-			Group: "valkeyrepl",
-			Unit:  "",
+			Title:  "$service_name - Replica vs Master Offsets",
+			Groups: []string{"valkeyrepl"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}_{{slave_ip}}",
@@ -1818,9 +1818,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Replicas",
-			Group: "valkeyrepl",
-			Unit:  "",
+			Title:  "Replicas",
+			Groups: []string{"valkeyrepl"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "__auto",
@@ -1829,9 +1829,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Replica Resync Info",
-			Group: "valkeyrepl",
-			Unit:  "",
+			Title:  "Replica Resync Info",
+			Groups: []string{"valkeyrepl"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{service_name}}_full_resyncs",
@@ -1850,9 +1850,9 @@ var LumoGraphs = map[string][]GraphConfig{
 	},
 	"wiredtiger": {
 		{
-			Title: "WiredTiger Transactions",
-			Group: "wiredtiger",
-			Unit:  "",
+			Title:  "WiredTiger Transactions",
+			Groups: []string{"wiredtiger"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{type}}",
@@ -1861,9 +1861,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "WiredTiger Cache Activity",
-			Group: "wiredtiger",
-			Unit:  "",
+			Title:  "WiredTiger Cache Activity",
+			Groups: []string{"wiredtiger"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Read into",
@@ -1876,9 +1876,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "WiredTiger Block Activity",
-			Group: "wiredtiger",
-			Unit:  "",
+			Title:  "WiredTiger Block Activity",
+			Groups: []string{"wiredtiger"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{type}}",
@@ -1887,9 +1887,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "WiredTiger Sessions",
-			Group: "wiredtiger",
-			Unit:  "",
+			Title:  "WiredTiger Sessions",
+			Groups: []string{"wiredtiger"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Cursors",
@@ -1902,9 +1902,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "WiredTiger Concurrency Tickets Available",
-			Group: "wiredtiger",
-			Unit:  "",
+			Title:  "WiredTiger Concurrency Tickets Available",
+			Groups: []string{"wiredtiger"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{txn_rw}}",
@@ -1913,9 +1913,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Queued Operations",
-			Group: "wiredtiger",
-			Unit:  "",
+			Title:  "Queued Operations",
+			Groups: []string{"wiredtiger"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{type}}",
@@ -1924,9 +1924,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "WiredTiger Checkpoint Time",
-			Group: "wiredtiger",
-			Unit:  "",
+			Title:  "WiredTiger Checkpoint Time",
+			Groups: []string{"wiredtiger"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "current",
@@ -1939,9 +1939,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "WiredTiger Cache Eviction",
-			Group: "wiredtiger",
-			Unit:  "",
+			Title:  "WiredTiger Cache Eviction",
+			Groups: []string{"wiredtiger"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{type}}",
@@ -1950,9 +1950,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "WiredTiger Cache Capacity",
-			Group: "wiredtiger",
-			Unit:  "",
+			Title:  "WiredTiger Cache Capacity",
+			Groups: []string{"wiredtiger"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Max",
@@ -1965,9 +1965,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "WiredTiger Cache Pages",
-			Group: "wiredtiger",
-			Unit:  "",
+			Title:  "WiredTiger Cache Pages",
+			Groups: []string{"wiredtiger"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{type}}",
@@ -1976,9 +1976,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "WiredTiger Log Records",
-			Group: "wiredtiger",
-			Unit:  "",
+			Title:  "WiredTiger Log Records",
+			Groups: []string{"wiredtiger"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{type}}",
@@ -1987,9 +1987,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Document Changes",
-			Group: "wiredtiger",
-			Unit:  "",
+			Title:  "Document Changes",
+			Groups: []string{"wiredtiger"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{state}}",
@@ -2014,9 +2014,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Scanned and Moved Objects",
-			Group: "wiredtiger",
-			Unit:  "",
+			Title:  "Scanned and Moved Objects",
+			Groups: []string{"wiredtiger"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "{{state}}",
@@ -2029,9 +2029,9 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title: "Page Faults",
-			Group: "wiredtiger",
-			Unit:  "",
+			Title:  "Page Faults",
+			Groups: []string{"wiredtiger"},
+			Unit:   "",
 			Series: []SeriesConfig{
 				{
 					Legend: "Faults",

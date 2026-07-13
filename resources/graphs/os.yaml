@@ -1,6 +1,7 @@
 dashboards:
   - name: Node_Summary
-    group: os
+    groups:
+      - os
     subdir: OS
     graphs:
       - CPU Usage

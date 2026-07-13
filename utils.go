@@ -111,7 +111,7 @@ func validateGraphConfigs(configs []GraphConfig) error {
 			return fmt.Errorf("graph configuration at index %d %w", i, ErrMissingTitle)
 		}
 
-		if cfg.Group == "" {
+		if len(cfg.Groups) == 0 {
 			return fmt.Errorf("graph configuration '%s' (index %d) %w", cfg.Title, i, ErrMissingGroup)
 		}
 

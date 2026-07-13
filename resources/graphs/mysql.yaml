@@ -1,6 +1,7 @@
 dashboards:
   - name: MySQL_Instance_Summary
-    group: mysql
+    groups:
+      - mysql
     graphs:
       - MySQL Connections
       - MySQL Aborted Connections
@@ -17,7 +18,8 @@ dashboards:
       - MySQL Table Definition Cache
 
   - name: MySQL_InnoDB_Details
-    group: innodb
+    groups:
+      - innodb
     graphs:
       - InnoDB Row Reads
       - InnoDB Row Writes
@@ -40,12 +42,14 @@ dashboards:
       - Innodb Flushing by Type
 
   - name: MySQL_Replication_Summary
-    group: async
+    groups:
+      - async
     graphs:
       - MySQL replication lag
 
   - name: PXC_Galera_Cluster_Summary
-    group: pxc
+    groups:
+      - pxc
     subdir: MySQL
     graphs:
       - Percona XtraDB / Galera Cluster Size
@@ -54,7 +58,8 @@ dashboards:
       - Average Galera Replication Latency
 
   - name: PXC_Galera_Node_Summary
-    group: pxc
+    groups:
+      - pxc
     subdir: MySQL
     graphs:
       - Galera Flow Control
@@ -62,14 +67,16 @@ dashboards:
       - Galera Writeset Traffic
 
   - name: MySQL_Group_Replication_Summary
-    group: gr
+    groups:
+      - gr
     graphs:
       - Replication Lag
       - Replication Delay
       - Transactions in the Queue for Checking
 
   - name: MySQL_Amazon_Aurora_Details
-    group: aurora
+    groups:
+      - aurora
     graphs:
       - Amazon Aurora Transaction Commits
       - Amazon Aurora Load

@@ -39,8 +39,8 @@ This is the primary functionality of Lumograph. It fetches the data from the rem
 
 **Example:**
 ```bash
-export PMM_TOKEN="your_secure_token"
-./lumograph get-graphs -endpoint https://pmmdemo.percona.com -service percona-mongo-0-rs1 -groups os,wiredtiger
+$ export PMM_TOKEN="your_secure_token"
+$ ./lumograph get-graphs -endpoint https://pmmdemo.percona.com -service percona-mongo-0-rs1 -groups os,wiredtiger
 ```
 
 ---
@@ -56,8 +56,8 @@ This command fetches the remote PMM inventory and returns a list of known servic
 
 **Example:**
 ```bash
-export PMM_TOKEN="your_secure_token"
-./lumograph list-services -endpoint https://pmmdemo.percona.com
+$ export PMM_TOKEN="your_secure_token"
+$ ./lumograph list-services -endpoint https://pmmdemo.percona.com
 ```
 
 ---
@@ -69,7 +69,7 @@ This command outputs a list of the various graph group tags available for render
 
 **Example:**
 ```bash
-./lumograph list-groups
+$ ./lumograph list-groups
 ```
 
 ---

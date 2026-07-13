@@ -1,6 +1,7 @@
 dashboards:
   - name: MongoDB_Instance_Summary
-    group: mongo
+    groups:
+      - mongo
     graphs:
       - Command Operations
       - Latency Detail
@@ -12,7 +13,8 @@ dashboards:
       - Scanned and Moved Objects
 
   - name: MongoDB_WiredTiger_Details
-    group: wiredtiger
+    groups:
+      - wiredtiger
     graphs:
       - WiredTiger Transactions
       - WiredTiger Cache Activity
@@ -30,7 +32,8 @@ dashboards:
       - Page Faults
 
   - name: MongoDB_ReplSet_Summary
-    group: replset
+    groups:
+      - replset
     graphs:
       - Operation Latencies
       - Reads & Writes
@@ -41,7 +44,8 @@ dashboards:
       - Oplog GB/Hour - $service_name
 
   - name: MongoDB_Cluster_Summary
-    group: sharding
+    groups:
+      - sharding
     graphs:
       - Command Operations
       - Operation Latencies

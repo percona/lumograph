@@ -81,11 +81,11 @@ func renderGraphGroup(cfg *LumoConfig, graphGroup string) {
 	}
 
 	for _, graphConfig := range graphConfigs {
-		renderGraph(cfg, graphConfig)
+		renderGraph(cfg, &graphConfig)
 	}
 }
 
-func renderGraph(cfg *LumoConfig, graphConfig GraphConfig) {
+func renderGraph(cfg *LumoConfig, graphConfig *GraphConfig) {
 
 	zap.S().Debugf("Generating graph '%s'", graphConfig.Title)
 
@@ -94,7 +94,7 @@ func renderGraph(cfg *LumoConfig, graphConfig GraphConfig) {
 
 	zap.S().Infof("Generating graph '%s'", graphConfig.Title)
 
-	if err := generateGraph(cfg, &graphConfig, outputFile); err != nil {
+	if err := generateGraph(cfg, graphConfig, outputFile); err != nil {
 		zap.S().Errorf("error generating graph: %v", err)
 	}
 }

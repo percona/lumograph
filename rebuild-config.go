@@ -38,7 +38,7 @@ type SeriesConfig struct {
 
 type GraphConfig struct {
 	Title  string         `json:"title"`
-	Group  string         `json:"group"`
+	Groups []string       `json:"groups"`
 	Unit   string         `json:"unit,omitempty"`
 	Series []SeriesConfig `json:"series"`
 }
@@ -66,7 +66,7 @@ type YamlConfig struct {
 
 type YamlDashboard struct {
 	Name   string   `yaml:"name"`
-	Group  string   `yaml:"group"`
+	Groups []string `yaml:"groups"`
 	Subdir string   `yaml:"subdir"`
 	Graphs []string `yaml:"graphs"`
 }
@@ -137,6 +137,11 @@ func processYamlFile(file string) []GraphConfig {
 	for _, dash := range config.Dashboards {
 		if dash.Name == "" {
 			zap.S().Error("    Dashboard missing name.")
+			continue
+		}
+
+		if len(dash.Groups) == 0 {
+			zap.S().Errorf("    Dashboard '%s' missing groups.", dash.Name)
 			continue
 		}
 
@@ -277,7 +282,7 @@ func mapGrafanaToLumo(dash YamlDashboard, grafanaDash *GrafanaDashboard) []Graph
 			// Add to our global config
 			lumoConfigs = append(lumoConfigs, GraphConfig{
 				Title:  p.Title,
-				Group:  dash.Group,
+				Groups: dash.Groups,
 				Unit:   unit,
 				Series: series,
 			})
@@ -299,10 +304,13 @@ func saveGraphConfigs(configs []GraphConfig) {
 		zap.S().Fatal("No graph configs were generated.")
 	}
 
-	// "Groupify" the graphs
+	// "Groupify" the graphs. A single graph may belong to multiple groups,
+	// in which case it appears under each of its group keys.
 	grouped := make(map[string][]GraphConfig)
 	for _, c := range configs {
-		grouped[c.Group] = append(grouped[c.Group], c)
+		for _, g := range c.Groups {
+			grouped[g] = append(grouped[g], c)
+		}
 	}
 
 	var sb strings.Builder
@@ -326,9 +334,9 @@ func saveGraphConfigs(configs []GraphConfig) {
 		for _, c := range grouped[k] {
 
 			fmt.Fprintf(&sb, "\t\t{\n")
-			fmt.Fprintf(&sb, "\t\t\tTitle: %q,\n", c.Title)
-			fmt.Fprintf(&sb, "\t\t\tGroup: %q,\n", c.Group)
-			fmt.Fprintf(&sb, "\t\t\tUnit:  %q,\n", c.Unit)
+			fmt.Fprintf(&sb, "\t\t\tTitle:  %q,\n", c.Title)
+			fmt.Fprintf(&sb, "\t\t\tGroups: %s,\n", formatStringSlice(c.Groups))
+			fmt.Fprintf(&sb, "\t\t\tUnit:   %q,\n", c.Unit)
 			fmt.Fprintf(&sb, "\t\t\tSeries: []SeriesConfig{\n")
 
 			for _, s := range c.Series {
@@ -371,6 +379,17 @@ func initLogger() {
 	}
 
 	zap.ReplaceGlobals(logger)
+}
+
+// formatStringSlice renders a []string as a Go slice literal, e.g. []string{"a", "b"}
+func formatStringSlice(items []string) string {
+
+	quoted := make([]string, len(items))
+	for i, item := range items {
+		quoted[i] = fmt.Sprintf("%q", item)
+	}
+
+	return "[]string{" + strings.Join(quoted, ", ") + "}"
 }
 
 func toSnakeCase(s string) string {

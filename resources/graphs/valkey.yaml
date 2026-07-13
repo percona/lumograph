@@ -1,12 +1,14 @@
 dashboards:
   - name: Valkey_Clients
-    group: valkey
+    groups:
+      - valkey
     graphs:
       - $service_name - Connected/Blocked Clients
       - $service_name - Client Buffers
 
   - name: Valkey_ClusterDetails
-    group: valkeycluster
+    groups:
+      - valkeycluster
     graphs:
       - Slots Status
       - $service_name - Cluster State
@@ -15,7 +17,8 @@ dashboards:
       - $service_name - Known Nodes
 
   - name: Valkey_CommandDetails
-    group: valkey
+    groups:
+      - valkey
     graphs:
       - $service_name - Total Commands/Sec
       - $service_name - Read and Write Rate
@@ -23,7 +26,8 @@ dashboards:
       - $ns_service_name - Total Time Spent by Command/Sec
 
   - name: Valkey_Load
-    group: valkey
+    groups:
+      - valkey
     graphs:
       - $node_name - Total Commands/Sec
       - $service_name - Read and Write Rate
@@ -33,7 +37,8 @@ dashboards:
       - IO Threads Active
 
   - name: Valkey_Memory
-    group: valkey
+    groups:
+      - valkey
     graphs:
       - Memory Usage
       - Total Memory Usage
@@ -41,31 +46,36 @@ dashboards:
       - Expiring vs Not-Expiring Keys
 
   - name: Valkey_Network
-    group: valkey
+    groups:
+      - valkey
     graphs:
       - $service_name - Network Input
       - $service_name - Network Output
 
   - name: Valkey_Overview
-    group: valkey
+    groups:
+      - valkey
     graphs:
       - Total Memory Usage
       - Cumulative Network I/O
 
   - name: Valkey_PersistenceDetails
-    group: valkey
+    groups:
+      - valkey
     graphs:
       - Base, Current, Last COW Size
 
   - name: Valkey_Replication
-    group: valkeyrepl
+    groups:
+      - valkeyrepl
     graphs:
       - $service_name - Replica vs Master Offsets
       - Replicas
       - Replica Resync Info
 
   - name: Valkey_Slowlog
-    group: valkey
+    groups:
+      - valkey
     graphs:
       - Slowlog Length
       - Slowlog

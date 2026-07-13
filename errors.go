@@ -5,7 +5,7 @@ import "errors"
 // Configuration & Validation Errors
 var (
 	ErrMissingTitle  = errors.New("missing a 'title'")
-	ErrMissingGroup  = errors.New("missing a 'group'")
+	ErrMissingGroup  = errors.New("missing 'groups'")
 	ErrMissingSeries = errors.New("has no series defined")
 	ErrMissingLegend = errors.New("has an empty 'legend'")
 	ErrMissingExpr   = errors.New("has an empty 'expr'")

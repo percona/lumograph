@@ -1,6 +1,7 @@
 dashboards:
   - name: PostgreSQL_Instance_Summary
-    group: pgsql
+    groups:
+      - pgsql
     graphs:
       - PostgreSQL Connections
       - Active Connections
