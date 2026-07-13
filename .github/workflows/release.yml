@@ -83,3 +83,12 @@ jobs:
           files: dist/*
           body: ${{ steps.changelog.outputs.changelog }}
           fail_on_unmatched_files: true
+
+      - name: Copy releases to public site
+        run: |
+          git fetch origin gh-pages --depth 1
+          git checkout --progress --force -B gh-pages refs/remotes/origin/gh-pages
+          cp dist/* "releases/${GITHUB_REF_NAME}/"
+          git add "releases/${GITHUB_REF_NAME}"
+          git commit -am "Add Lumograph release ${GITHUB_REF_NAME}"
+          git push
