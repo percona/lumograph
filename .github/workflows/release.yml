@@ -89,6 +89,7 @@ jobs:
           git fetch origin gh-pages --depth 1
           git checkout --progress --force -B gh-pages refs/remotes/origin/gh-pages
           cp dist/* "releases/${GITHUB_REF_NAME}/"
-          git add "releases/${GITHUB_REF_NAME}"
+          sed -i "s/releases\/v.*\/lumograph-/releases\/${GITHUB_REF_NAME}\/lumograph-/g" index.html
+          git add index.html "releases/${GITHUB_REF_NAME}"
           git commit -am "Add Lumograph release ${GITHUB_REF_NAME}"
           git push
