@@ -11,6 +11,19 @@ var (
 	ErrMissingExpr   = errors.New("has an empty 'expr'")
 	ErrEmptyConfig   = errors.New("graph config is empty")
 	ErrFlagRequired  = errors.New("flag is required")
+
+	ErrInvalidDipperToken     = errors.New("invalid dipper token: must be 'dipper_' followed by 41 alphanumeric characters")
+	ErrInvalidDipperProjectID = errors.New("invalid dipper project ID: must start with CS, RITM, or PS")
+	ErrSyncDirRequired        = errors.New("missing required positional argument: image directory")
+	ErrNotADirectory          = errors.New("path is not a directory")
+)
+
+// Dipper Sync Errors
+var (
+	ErrReadingDir   = errors.New("error reading directory")
+	ErrNoImages     = errors.New("no image files found in directory")
+	ErrArchive      = errors.New("error creating archive")
+	ErrUploadFailed = errors.New("upload failed")
 )
 
 // API & Networking Errors

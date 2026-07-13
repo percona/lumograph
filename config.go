@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -12,20 +13,24 @@ import (
 
 // LumoConfig is the global application configuration derived from CLI flags
 type LumoConfig struct {
-	Endpoint    string
-	Service     string
-	Node        string
-	ClusterName string
-	Database    string
-	ReplSet     string
-	Groups      map[string]struct{}
-	OutDir      string
-	Interval    string
-	Start       time.Time
-	End         time.Time
-	Token       string
-	Debug       bool
-	InsecureTLS bool
+	Endpoint        string
+	Service         string
+	Node            string
+	ClusterName     string
+	Database        string
+	ReplSet         string
+	Groups          map[string]struct{}
+	OutDir          string
+	Interval        string
+	Start           time.Time
+	End             time.Time
+	Token           string
+	DipperToken     string
+	DipperProjectID string
+	Hostname        string
+	SyncDir         string
+	Debug           bool
+	InsecureTLS     bool
 }
 
 const (
@@ -34,6 +39,7 @@ const (
 	getGraphsCommand    = "get-graphs"
 	listGroupsCommand   = "list-groups"
 	listServicesCommand = "list-services"
+	dipperSyncCommand   = "dipper-sync"
 )
 
 func parseFlags() (string, LumoConfig) {
@@ -49,7 +55,7 @@ func parseFlags() (string, LumoConfig) {
 
 	var startStr, endStr, groupsStr string
 
-	getCmd, listCmd, listServicesCmd := setupFlagSets(&cfg, &startStr, &endStr, &groupsStr)
+	getCmd, listCmd, listServicesCmd, dipperSyncCmd := setupFlagSets(&cfg, &startStr, &endStr, &groupsStr)
 
 	var activeCmd *flag.FlagSet
 
@@ -60,6 +66,8 @@ func parseFlags() (string, LumoConfig) {
 		activeCmd = listCmd
 	case listServicesCommand:
 		activeCmd = listServicesCmd
+	case dipperSyncCommand:
+		activeCmd = dipperSyncCmd
 	default:
 		printUsage()
 		os.Exit(1)
@@ -75,7 +83,7 @@ func parseFlags() (string, LumoConfig) {
 	configureHTTPClient(cfg.InsecureTLS)
 
 	if command == getGraphsCommand || command == listServicesCommand {
-		cfg.Token = resolveToken(cfg.Token)
+		cfg.Token = resolveToken(cfg.Token, "PMM_TOKEN")
 	}
 
 	if command == getGraphsCommand {
@@ -83,14 +91,22 @@ func parseFlags() (string, LumoConfig) {
 		cfg.Groups = parseGroups(groupsStr)
 	}
 
+	if command == dipperSyncCommand {
+		cfg.DipperToken = resolveToken(cfg.DipperToken, "DIPPER_TOKEN")
+
+		// The sole positional argument is the directory of images to upload
+		cfg.SyncDir = activeCmd.Arg(0)
+	}
+
 	return command, cfg
 }
 
-func setupFlagSets(cfg *LumoConfig, startStr, endStr, groupsStr *string) (*flag.FlagSet, *flag.FlagSet, *flag.FlagSet) {
+func setupFlagSets(cfg *LumoConfig, startStr, endStr, groupsStr *string) (*flag.FlagSet, *flag.FlagSet, *flag.FlagSet, *flag.FlagSet) {
 
 	getGraphsCmd := flag.NewFlagSet(getGraphsCommand, flag.ExitOnError)
 	listGroupsCmd := flag.NewFlagSet(listGroupsCommand, flag.ExitOnError)
 	listServicesCmd := flag.NewFlagSet(listServicesCommand, flag.ExitOnError)
+	dipperSyncCmd := flag.NewFlagSet(dipperSyncCommand, flag.ExitOnError)
 
 	getGraphsCmd.StringVar(&cfg.Endpoint, "endpoint", "", "PMM URL (required)")
 	getGraphsCmd.StringVar(&cfg.Service, "service", "", "PMM Service name (required)")
@@ -115,14 +131,38 @@ func setupFlagSets(cfg *LumoConfig, startStr, endStr, groupsStr *string) (*flag.
 	listServicesCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
 	listServicesCmd.BoolVar(&cfg.InsecureTLS, "insecure-tls", false, "Disable TLS certificate verification (for self-signed certs)")
 
-	return getGraphsCmd, listGroupsCmd, listServicesCmd
+	dipperSyncCmd.StringVar(&cfg.DipperToken, "token", "", "Dipper API token (required, can also use DIPPER_TOKEN env var)")
+	dipperSyncCmd.StringVar(&cfg.DipperProjectID, "projectid", "", "Dipper project ID (required)")
+	dipperSyncCmd.StringVar(&cfg.Hostname, "hostname", "", "Hostname associated with the images (required)")
+
+	dipperSyncCmd.Usage = dipperSyncUsage(dipperSyncCmd)
+
+	return getGraphsCmd, listGroupsCmd, listServicesCmd, dipperSyncCmd
 }
 
-func resolveToken(cliToken string) string {
+// dipperSyncUsage returns a usage function that documents the positional argument.
+func dipperSyncUsage(fs *flag.FlagSet) func() {
 
-	envToken := os.Getenv("PMM_TOKEN")
+	return func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s dipper-sync [flags] <image-directory>\n\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Compresses the images in <image-directory> and uploads them to Dipper.\n\n")
+		fmt.Fprintf(os.Stderr, "Flags:\n")
+		fs.PrintDefaults()
+	}
+}
+
+var (
+	dipperTokenRe     = regexp.MustCompile(`^dipper_[a-zA-Z0-9]{41}$`)
+	dipperProjectIDRe = regexp.MustCompile(`^(CS|RITM|PS)`)
+)
+
+// resolveToken returns the token from the -token flag, falling back to the
+// named environment variable. Providing both is an error.
+func resolveToken(cliToken, envVar string) string {
+
+	envToken := os.Getenv(envVar)
 	if cliToken != "" && envToken != "" {
-		zap.S().Fatalf("error: both -token flag and PMM_TOKEN environment variable are set. Please provide only one.")
+		zap.S().Fatalf("error: both -token flag and %s environment variable are set. Please provide only one.", envVar)
 	}
 
 	if cliToken == "" {
@@ -183,6 +223,7 @@ func printUsage() {
 	fmt.Fprintf(os.Stderr, "Commands:\n")
 	fmt.Fprintf(os.Stderr, "  get-graphs\t\tGenerates charts by querying a PMM endpoint.\n")
 	fmt.Fprintf(os.Stderr, "  list-groups\t\tLists all available graph groups.\n")
-	fmt.Fprintf(os.Stderr, "  list-services\t\tLists all available services from the PMM inventory API.\n\n")
+	fmt.Fprintf(os.Stderr, "  list-services\t\tLists all available services from the PMM inventory API.\n")
+	fmt.Fprintf(os.Stderr, "  dipper-sync\t\tCompresses a directory of images and uploads them to Dipper.\n\n")
 	fmt.Fprintf(os.Stderr, "Run '%s <command> -h' to see flags for a specific command.\n", os.Args[0])
 }

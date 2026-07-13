@@ -27,6 +27,8 @@ func main() {
 		executeListServices(&cfg)
 	case getGraphsCommand:
 		executeGetGraphs(&cfg)
+	case dipperSyncCommand:
+		executeDipperSync(&cfg)
 	}
 }
 
