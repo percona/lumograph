@@ -80,3 +80,16 @@ jobs:
           files: dist/*
           body: ${{ steps.changelog.outputs.changelog }}
           fail_on_unmatched_files: true
+
+      - name: Update public docs
+        run: |
+          PUBHASH=$(git log -n 1 --oneline | cut -d' ' -f 1)
+          PUBDATE=$(git log -1 --format="%ai" | cut -d' ' -f 1)
+          PUBVER=${GITHUB_REF_NAME}
+          sed -i "s/<p>Version: .*/<p>Version: ${PUBVER} (@${PUBHASH} ${PUBDATE})<\/p>/g" docs/index.html
+          sed -i "s/releases\/v.*\//releases\/${PUBVER}\//g" docs/index.html
+          git add docs/index.html
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "GitHub Actions"
+          git commit -m "Update docs for version ${PUBVER}"
+          git push origin main

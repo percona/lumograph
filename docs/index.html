@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/pcs.css">
+  </head>
+  <body>
+    <div class="container-xl">
+
+     <div class="row mt-3">
+      <div class="col-12 text-center">
+       <img src="assets/img/lumograph.png" alt="Logo" style="width:444px;height:100px"/>
+       <p class="view"><a href="https://github.com/percona/lumograph">View the Project on GitHub <small>percona/lumograph</small></a></p>
+      </div>
+     </div>
+
+     <div class="row">
+      <div class="col-4 offset-md-4 text-center">
+       <p>Version: 1.4.1 (@968d681 2026-06-04)</p>
+       <a href="https://github.com/percona/lumograph/releases/v1.1.1/lumograph-linux-amd64">Download <strong>Linux x86_64</strong></a>&nbsp;|&nbsp;
+       <a href="https://github.com/percona/lumograph/releases/v1.1.1/lumograph-darwin-arm64">Download <strong>macos arm64</strong></a>
+      </div>
+     </div>
+
+     <div class="row mt-3">
+      <div class="col-10 offset-md-1">
+
+<p><strong>Lumograph</strong> is a vibe-coded replacement for the Grafana renderer plugin when used with ‘Percona Monitoring and Management’, and Dipper.
+It is a single, statically compiled Go binary with embedded fonts and configurations to render timeseries data as PNG images.</p>
+<hr />
+<h2>Requirements</h2>
+<ul>
+<li>Generic Linux x86_64, or macos arm64</li>
+<li>Accessible Percona Monitoring and Management server</li>
+<li>Must create a new, temporary, Service Account with ‘Admin’ level privilege (<a href="https://perconadev.atlassian.net/browse/PMM-15192">PMM-15192</a>)</li>
+<li>For Dipper sync, Lumograph needs internet access to Dipper</li>
+</ul>
+<hr />
+<h2>Quick Start Steps</h2>
+<ol>
+<li>Generate a new service account, and API token, in PMM with Admin privileges</li>
+<li>Download the latest Lumograph to the target machine which has access to PMM</li>
+<li>Export the PMM token within the shell: <code>export PMM_TOKEN="token_here"</code></li>
+<li>List available services using Lumograph: <code>$ ./lumograph list-services -endpoint https://yourpmm.company.com</code></li>
+<li>Generate graphs for the chosen service: <code>$ ./lumograph get-graphs -endpoint https://yourpmm.company.com -service mysql1.server-mysql -groups os,mysql,innodb</code></li>
+<li>Tar/Zip/Compress the resulting images directory, and provide to Percona</li>
+<li>Optional: Use Lumograph to send graphs directly to Dipper (Requires Dipper token)</li>
+</ol>
+<hr />
+<h2>Installation</h2>
+<p>Download a precompiled release binary to the target machine.</p>
+<hr />
+<h2>Usage &amp; Commands</h2>
+<p>Lumograph uses a series of subcommands. You must provide one of the following commands to execute the tool:</p>
+<h3><code>get-graphs</code></h3>
+<p><em>Generates the charts specified by the ‘groups’ flag, by querying the provided PMM endpoint.</em></p>
+<p>This is the primary functionality of Lumograph. It fetches the data from the remote PMM server, and renders the graph images to the local disk.</p>
+<p><strong>Required Flags:</strong></p>
+<ul>
+<li><code>-endpoint</code> : The base URL of the PMM server (e.g., <code>https://pmm1.int.company.com</code>).</li>
+<li><code>-groups</code> : A comma-separated list of graph groups to render (e.g., <code>mysql,innodb,os</code>). See <code>list-groups</code> command below.</li>
+<li><code>-service</code> : The name of the service for the graphs. See <code>list-services</code> command below.</li>
+<li><code>-token</code> : PMM API token. <em>(Can also set the <code>PMM_TOKEN</code> environment variable).</em></li>
+</ul>
+<p><strong>Optional Flags:</strong></p>
+<ul>
+<li><code>-cluster-name</code> : Required for cluster-based graphs (ie: PXC, Mongo, etc)</li>
+<li><code>-database</code> : Filter for PostgreSQL databases</li>
+<li><code>-debug</code> : Enables verbose structured logging, including raw HTTP payloads and data structures.</li>
+<li><code>-end</code> : Absolute end time (<code>YYYY-MM-DD HH:MM:SS</code>). Defaults to now.</li>
+<li><code>-insecure-tls</code> : Disable TLS certificate verification (for self-signed certs)</li>
+<li><code>-interval</code> : The time interval for rates/averages. Defaults to <code>5m</code> (PMM default).</li>
+<li><code>-node</code> : Must supply the node name if not automatically detected.</li>
+<li><code>-outdir</code> : Output directory for graphs. Defaults to service name.</li>
+<li><code>-replset</code> : MongoDB replica set name</li>
+<li><code>-start</code> : Absolute start time (<code>YYYY-MM-DD HH:MM:SS</code>). Defaults to 24 hours ago.</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-bash">$ export PMM_TOKEN=&quot;your_secure_token&quot;
+$ ./lumograph get-graphs -endpoint https://pmmdemo.percona.com -service percona-mongo-0-rs1 -groups os,wiredtiger
+</code></pre>
+<hr />
+<h3><code>list-services</code></h3>
+<p><em>Lists all available services from the PMM inventory API.</em></p>
+<p>This command fetches the remote PMM inventory, and returns a list of known services.</p>
+<p><strong>Required Flags:</strong></p>
+<ul>
+<li><code>-endpoint</code> : The PMM URL.</li>
+<li><code>-token</code> : The PMM API token (or <code>PMM_TOKEN</code> env var).</li>
+</ul>
+<p><strong>Optional Flags:</strong></p>
+<ul>
+<li><code>-debug</code> : Enables verbose structured logging, including raw HTTP payloads and data structures.</li>
+<li><code>-insecure-tls</code> : Disable TLS certificate verification (for self-signed certs)</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-bash">$ export PMM_TOKEN=&quot;your_secure_token&quot;
+$ ./lumograph list-services -endpoint https://pmmdemo.percona.com
+</code></pre>
+<hr />
+<h3><code>list-groups</code></h3>
+<p><em>Lists all available graph groups found in the Lumograph configuration.</em></p>
+<p>This command outputs a list of the various graph group tags available for rendering. Use these names in the <code>-groups</code> flag of the <code>get-graphs</code> command.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-bash">$ ./lumograph list-groups
+</code></pre>
+<hr />
+<h3><code>dipper-sync</code></h3>
+<p><em>Compresses the images in <image-directory>, and uploads them to Dipper.</em></p>
+<p><strong>Required Flags:</strong></p>
+<ul>
+<li><code>-hostname</code> : Hostname associated with the images.</li>
+<li><code>-projectid</code> : Dipper Project ID.</li>
+<li><code>-token</code> : Dipper API token (can also use DIPPER_TOKEN env var).</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-bash">$ export DIPPER_TOKEN=&quot;dipper_token&quot;
+$ ./lumograph dipper-sync -hostname mysql1.int.company.com -projectid PS0018888 mysql1-service/
+</code></pre>
+
+      </div>
+     </div>
+
+     <div class="row mt-3 row-cols-1 text-center">
+       <em>This project is maintained by <a href="https://github.com/percona">Percona</a></em>
+     </div>
+ 
+    </div> 
+ 
+  </body>
+</html>
