@@ -88,7 +88,7 @@ jobs:
           PUBVER=${GITHUB_REF_NAME}
           git checkout main
           sed -i "s/<p>Version: .*/<p>Version: ${PUBVER} (@${PUBHASH} ${PUBDATE})<\/p>/g" docs/index.html
-          sed -i "s|\(releases/\)v[0-9]\+\.[0-9]\+\.[0-9]\+|\1${PUBVER}|g" docs/index.html
+          sed -i "s|\(releases/download/\)v[0-9]\+\.[0-9]\+\.[0-9]\+|\1${PUBVER}|g" docs/index.html
           git add docs/index.html
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name "GitHub Actions"
