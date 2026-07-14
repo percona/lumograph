@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="../resources/lumograph.png" alt="Lumograph Logo" width="300"/>
+  <img src="../docs/assets/img/lumograph.png" alt="Lumograph Logo" width="300"/>
 </div>
 
 # Lumograph

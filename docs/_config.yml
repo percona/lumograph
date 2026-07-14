@@ -1,5 +1,3 @@
 title: Lumograph
-logo: ../resources/lumograph.png
 description: Render Grafana graph images directly from PromQL
-show_downloads: true
 theme: jekyll-theme-minimal
