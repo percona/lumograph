@@ -42,9 +42,6 @@ jobs:
           echo "Building Linux (amd64)..."
           GOOS=linux GOARCH=amd64 go build -ldflags="-X 'main.Version=${GITHUB_REF_NAME}'" -o dist/lumograph-linux-amd64 .
 
-          echo "Building macOS (amd64)..."
-          GOOS=darwin GOARCH=amd64 go build -ldflags="-X 'main.Version=${GITHUB_REF_NAME}'" -o dist/lumograph-darwin-amd64 .
-
           echo "Building macOS (arm64/Apple Silicon)..."
           GOOS=darwin GOARCH=arm64 go build -ldflags="-X 'main.Version=${GITHUB_REF_NAME}'" -o dist/lumograph-darwin-arm64 .
 
@@ -83,16 +80,3 @@ jobs:
           files: dist/*
           body: ${{ steps.changelog.outputs.changelog }}
           fail_on_unmatched_files: true
-
-      - name: Copy releases to public site
-        run: |
-          git fetch origin gh-pages --depth 1
-          git checkout --progress --force -B gh-pages refs/remotes/origin/gh-pages
-          mkdir -p "releases/${GITHUB_REF_NAME}"
-          cp dist/* "releases/${GITHUB_REF_NAME}/"
-          sed -i "s/releases\/v.*\/lumograph-/releases\/${GITHUB_REF_NAME}\/lumograph-/g" index.html
-          git add index.html "releases/${GITHUB_REF_NAME}"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-          git commit -am "Add Lumograph release ${GITHUB_REF_NAME}"
-          git push
