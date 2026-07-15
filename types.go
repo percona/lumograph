@@ -16,6 +16,12 @@ type VMResponse struct {
 	} `json:"data"`
 }
 
+// DipperResponse is the JSON returned by the Dipper upload endpoint
+type DipperResponse struct {
+	Ok  bool   `json:"ok"`
+	Msg string `json:"msg"`
+}
+
 // TableRow represents a row in the legend-table of each graph
 type TableRow struct {
 	Legend string

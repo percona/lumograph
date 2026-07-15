@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -35,11 +36,16 @@ func executeDipperSync(cfg *LumoConfig) {
 
 	zap.S().Infof("Compressed %d image(s) (%d bytes). Uploading to Dipper...", count, len(archive))
 
-	if err := uploadArchive(cfg, archive); err != nil {
+	msg, err := uploadArchive(cfg, archive)
+	if err != nil {
 		zap.S().Fatalf("error uploading archive: %v", err)
 	}
 
 	zap.S().Infof("Successfully uploaded %d image(s) for project '%s' (host '%s')", count, cfg.DipperProjectID, cfg.Hostname)
+
+	if msg != "" {
+		zap.S().Infof("Dipper: %s", msg)
+	}
 }
 
 // validateDipperSyncFlags ensures all required flags and the positional
@@ -153,32 +159,34 @@ func addFileToArchive(tw *tar.Writer, dir, name string) error {
 }
 
 // uploadArchive POSTs the archive to Dipper as multipart/form-data along with
-// the project_id and hostname fields and the X-Dipper-Auth header.
-func uploadArchive(cfg *LumoConfig, archive []byte) error {
+// the project_id and hostname fields and the X-Dipper-Auth header. It parses
+// the JSON response ({"ok": bool, "msg": string}) and returns the message,
+// treating ok=false as a failure.
+func uploadArchive(cfg *LumoConfig, archive []byte) (string, error) {
 
 	var body bytes.Buffer
 
 	writer := multipart.NewWriter(&body)
 
 	if err := writer.WriteField("project_id", cfg.DipperProjectID); err != nil {
-		return fmt.Errorf("%w: %w", ErrArchive, err)
+		return "", fmt.Errorf("%w: %w", ErrArchive, err)
 	}
 
 	if err := writer.WriteField("hostname", cfg.Hostname); err != nil {
-		return fmt.Errorf("%w: %w", ErrArchive, err)
+		return "", fmt.Errorf("%w: %w", ErrArchive, err)
 	}
 
-	part, err := writer.CreateFormFile("file", cfg.Hostname+".tar.gz")
+	part, err := writer.CreateFormFile("pmmData", cfg.Hostname+".tar.gz")
 	if err != nil {
-		return fmt.Errorf("%w: %w", ErrArchive, err)
+		return "", fmt.Errorf("%w: %w", ErrArchive, err)
 	}
 
 	if _, err := part.Write(archive); err != nil {
-		return fmt.Errorf("%w: %w", ErrArchive, err)
+		return "", fmt.Errorf("%w: %w", ErrArchive, err)
 	}
 
 	if err := writer.Close(); err != nil {
-		return fmt.Errorf("%w: %w", ErrArchive, err)
+		return "", fmt.Errorf("%w: %w", ErrArchive, err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
@@ -186,7 +194,7 @@ func uploadArchive(cfg *LumoConfig, archive []byte) error {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, dipperUploadURL, &body)
 	if err != nil {
-		return fmt.Errorf("%w: %w", ErrCreateRequest, err)
+		return "", fmt.Errorf("%w: %w", ErrCreateRequest, err)
 	}
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
@@ -194,16 +202,35 @@ func uploadArchive(cfg *LumoConfig, archive []byte) error {
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("%w: %w", ErrExecRequest, err)
+		return "", fmt.Errorf("%w: %w", ErrExecRequest, err)
 	}
 
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		respBody, _ := io.ReadAll(resp.Body)
+	return parseUploadResponse(resp)
+}
 
-		return fmt.Errorf("%w: HTTP %d: %s", ErrUploadFailed, resp.StatusCode, strings.TrimSpace(string(respBody)))
+// parseUploadResponse reads and interprets the Dipper JSON response body.
+func parseUploadResponse(resp *http.Response) (string, error) {
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("%w: %w", ErrReadResponse, err)
 	}
 
-	return nil
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return "", fmt.Errorf("%w: HTTP %d: %s", ErrUploadFailed, resp.StatusCode, strings.TrimSpace(string(respBody)))
+	}
+
+	var dr DipperResponse
+
+	if err := json.Unmarshal(respBody, &dr); err != nil {
+		return "", fmt.Errorf("%w: HTTP %d: %s", ErrUploadFailed, resp.StatusCode, strings.TrimSpace(string(respBody)))
+	}
+
+	if !dr.Ok {
+		return "", fmt.Errorf("%w: %s", ErrUploadFailed, dr.Msg)
+	}
+
+	return dr.Msg, nil
 }
