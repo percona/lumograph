@@ -12,6 +12,9 @@ var (
 	ErrEmptyConfig   = errors.New("graph config is empty")
 	ErrFlagRequired  = errors.New("flag is required")
 
+	ErrConflictingTimeFlags = errors.New("-last cannot be combined with -start or -end")
+	ErrInvalidLastDuration  = errors.New("invalid -last duration: expected a positive value with unit m, h, or d (e.g., 30m, 12h, 7d)")
+
 	ErrInvalidDipperToken     = errors.New("invalid dipper token: must be 'dipper_' followed by 41 alphanumeric characters")
 	ErrInvalidDipperProjectID = errors.New("invalid dipper project ID: must start with CS, RITM, or PS")
 	ErrSyncDirRequired        = errors.New("missing required positional argument: image directory")

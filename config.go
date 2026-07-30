@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -42,6 +43,9 @@ const (
 	dipperSyncCommand   = "dipper-sync"
 )
 
+// lastDurationRe is a regular expression to parse the last duration flag
+var lastDurationRe = regexp.MustCompile(`^([1-9]\d*)([mhd])$`)
+
 func parseFlags() (string, LumoConfig) {
 
 	if len(os.Args) < 2 {
@@ -53,9 +57,9 @@ func parseFlags() (string, LumoConfig) {
 
 	var cfg LumoConfig
 
-	var startStr, endStr, groupsStr string
+	var startStr, endStr, lastStr, groupsStr string
 
-	getCmd, listCmd, listServicesCmd, dipperSyncCmd := setupFlagSets(&cfg, &startStr, &endStr, &groupsStr)
+	getCmd, listCmd, listServicesCmd, dipperSyncCmd := setupFlagSets(&cfg, &startStr, &endStr, &lastStr, &groupsStr)
 
 	var activeCmd *flag.FlagSet
 
@@ -87,7 +91,7 @@ func parseFlags() (string, LumoConfig) {
 	}
 
 	if command == getGraphsCommand {
-		cfg.Start, cfg.End = resolveTimeRanges(startStr, endStr)
+		cfg.Start, cfg.End = resolveTimeRanges(startStr, endStr, lastStr)
 		cfg.Groups = parseGroups(groupsStr)
 	}
 
@@ -101,7 +105,7 @@ func parseFlags() (string, LumoConfig) {
 	return command, cfg
 }
 
-func setupFlagSets(cfg *LumoConfig, startStr, endStr, groupsStr *string) (*flag.FlagSet, *flag.FlagSet, *flag.FlagSet, *flag.FlagSet) {
+func setupFlagSets(cfg *LumoConfig, startStr, endStr, lastStr, groupsStr *string) (*flag.FlagSet, *flag.FlagSet, *flag.FlagSet, *flag.FlagSet) {
 
 	getGraphsCmd := flag.NewFlagSet(getGraphsCommand, flag.ExitOnError)
 	listGroupsCmd := flag.NewFlagSet(listGroupsCommand, flag.ExitOnError)
@@ -119,6 +123,7 @@ func setupFlagSets(cfg *LumoConfig, startStr, endStr, groupsStr *string) (*flag.
 	getGraphsCmd.StringVar(&cfg.Interval, "interval", "5m", "Interval duration for graphs (e.g., 5m, 1h)")
 	getGraphsCmd.StringVar(startStr, "start", "", "Start time (YYYY-MM-DD HH:MM:SS, defaults to 24h ago)")
 	getGraphsCmd.StringVar(endStr, "end", "", "End time (YYYY-MM-DD HH:MM:SS, defaults to now)")
+	getGraphsCmd.StringVar(lastStr, "last", "", "Relative lookback window (e.g., 30m, 12h, 7d); mutually exclusive with -start/-end")
 	getGraphsCmd.StringVar(&cfg.Token, "token", "", "PMM API token (can also use PMM_TOKEN env var)")
 	getGraphsCmd.BoolVar(&cfg.Debug, "debug", false, "Print detailed HTTP request and response information")
 	getGraphsCmd.BoolVar(&cfg.InsecureTLS, "insecure-tls", false, "Disable TLS certificate verification (for self-signed certs)")
@@ -172,7 +177,22 @@ func resolveToken(cliToken, envVar string) string {
 	return cliToken
 }
 
-func resolveTimeRanges(startStr, endStr string) (time.Time, time.Time) {
+func resolveTimeRanges(startStr, endStr, lastStr string) (time.Time, time.Time) {
+
+	if lastStr != "" {
+		if startStr != "" || endStr != "" {
+			zap.S().Fatalf("%v", ErrConflictingTimeFlags)
+		}
+
+		dur, err := parseLastDuration(lastStr)
+		if err != nil {
+			zap.S().Fatalf("%v", err)
+		}
+
+		end := time.Now()
+
+		return end.Add(-dur), end
+	}
 
 	var start, end time.Time
 
@@ -197,6 +217,31 @@ func resolveTimeRanges(startStr, endStr string) (time.Time, time.Time) {
 	}
 
 	return start, end
+}
+
+// parseLastDuration parses a relative duration like "30m", "12h", or "7d".
+func parseLastDuration(s string) (time.Duration, error) {
+
+	matches := lastDurationRe.FindStringSubmatch(s)
+	if matches == nil {
+		return 0, ErrInvalidLastDuration
+	}
+
+	n, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return 0, fmt.Errorf("%w: %w", ErrInvalidLastDuration, err)
+	}
+
+	switch matches[2] {
+	case "m":
+		return time.Duration(n) * time.Minute, nil
+	case "h":
+		return time.Duration(n) * time.Hour, nil
+	case "d":
+		return time.Duration(n) * 24 * time.Hour, nil
+	default:
+		return 0, ErrInvalidLastDuration
+	}
 }
 
 // parseGroups splits the comma-separated -groups flag into a set, trimming
