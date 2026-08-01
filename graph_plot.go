@@ -81,7 +81,7 @@ func hourlyTicks(minVal, maxVal float64, stepHours int) []plot.Tick {
 		t = t.Add(time.Hour)
 	}
 
-	for t.Hour() % stepHours != 0 {
+	if t.Hour()%stepHours != 0 {
 		t = t.Add(time.Hour)
 		if float64(t.Unix()) > maxVal {
 			return ticks
