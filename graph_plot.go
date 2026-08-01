@@ -56,9 +56,23 @@ func (g HourlyGrid) Plot(canvas draw.Canvas, plt *plot.Plot) {
 	}
 }
 
+// HourlyTicker places major x-axis ticks at a clock-aligned interval of
+// ceil(spanHours/24) hours so at most ~24 timestamp labels appear.
 type HourlyTicker struct{}
 
 func (HourlyTicker) Ticks(minVal, maxVal float64) []plot.Tick {
+
+	if maxVal <= minVal {
+		return []plot.Tick{{Value: minVal, Label: " "}}
+	}
+
+	spanHours := (maxVal - minVal) / 3600
+	stepHours := max(1, int(math.Ceil(spanHours/24)))
+
+	return hourlyTicks(minVal, maxVal, stepHours)
+}
+
+func hourlyTicks(minVal, maxVal float64, stepHours int) []plot.Tick {
 
 	var ticks []plot.Tick
 
@@ -67,11 +81,16 @@ func (HourlyTicker) Ticks(minVal, maxVal float64) []plot.Tick {
 		t = t.Add(time.Hour)
 	}
 
-	for ; float64(t.Unix()) <= maxVal; t = t.Add(time.Hour) {
-		if t.Hour()%2 == 0 {
-			// Provide a non-empty string so it's treated as a major tick
-			ticks = append(ticks, plot.Tick{Value: float64(t.Unix()), Label: " "})
+	for t.Hour() % stepHours != 0 {
+		t = t.Add(time.Hour)
+		if float64(t.Unix()) > maxVal {
+			return ticks
 		}
+	}
+
+	step := time.Duration(stepHours) * time.Hour
+	for ; float64(t.Unix()) <= maxVal; t = t.Add(step) {
+		ticks = append(ticks, plot.Tick{Value: float64(t.Unix()), Label: " "})
 	}
 
 	return ticks
