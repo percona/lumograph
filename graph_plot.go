@@ -16,7 +16,13 @@ import (
 const (
 	legendPadding = 8
 
-	ops_str = "ops"
+	// Unit strings
+	ops_str         = "ops"
+	bytes_str       = "bytes"
+	short_str       = "short"
+	percent_str     = "percent"
+	percentunit_str = "percentunit"
+	nanoseconds_str = "nanoseconds"
 )
 
 // Palette is a slice of Color{}s derived from Grafana's "classic" palette

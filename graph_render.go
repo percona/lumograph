@@ -153,7 +153,7 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 	}
 
 	// Draw the legend table canvas
-	drawLegendTable(draw.Crop(dc, 0, 0, 0, -(4*vg.Inch)), tableRows)
+	drawLegendTable(draw.Crop(dc, 0, 0, 0, -(4*vg.Inch)), tableRows, cfg.Unit)
 
 	// Create the output file image
 	f, err := os.Create(output) // #nosec

@@ -10,7 +10,7 @@ import (
 )
 
 // drawLegendTable is responsible for drawing the legend table at the bottom of the image
-func drawLegendTable(tableCanvas draw.Canvas, rows []TableRow) {
+func drawLegendTable(tableCanvas draw.Canvas, rows []TableRow, unit string) {
 
 	// Define the text styles for the legend table
 	styleNormal := text.Style{Font: mediumFont, Color: color.Black, Handler: plot.DefaultTextHandler}
@@ -53,9 +53,9 @@ func drawLegendTable(tableCanvas draw.Canvas, rows []TableRow) {
 
 		// Draw the min, max, and average values text
 		if row.Min <= row.Max {
-			tableCanvas.FillText(styleNormal, vg.Point{X: colMin, Y: y}, formatValue(row.Min))
-			tableCanvas.FillText(styleNormal, vg.Point{X: colMax, Y: y}, formatValue(row.Max))
-			tableCanvas.FillText(styleNormal, vg.Point{X: colAvg, Y: y}, formatValue(row.Avg))
+			tableCanvas.FillText(styleNormal, vg.Point{X: colMin, Y: y}, formatValue(row.Min, unit))
+			tableCanvas.FillText(styleNormal, vg.Point{X: colMax, Y: y}, formatValue(row.Max, unit))
+			tableCanvas.FillText(styleNormal, vg.Point{X: colAvg, Y: y}, formatValue(row.Avg, unit))
 		}
 	}
 }

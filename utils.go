@@ -7,8 +7,56 @@ import (
 	"strings"
 )
 
-// formatValue takes a float64 value and returns a string formatted with commas and decimal places
-func formatValue(val float64) string {
+// formatValue formats val according to unit. Unknown units fall back to formatDefault.
+func formatValue(val float64, unit string) string {
+
+	switch unit {
+	case bytes_str:
+		return formatBytes(val)
+	default:
+		return formatDefault(val)
+	}
+}
+
+// formatBytes scales val with binary (1024) units and formats to 2 decimal places.
+func formatBytes(val float64) string {
+
+	const (
+		kb = 1024
+		mb = kb * 1024
+		gb = mb * 1024
+		tb = gb * 1024
+	)
+
+	absVal := math.Abs(val)
+
+	var scaled float64
+
+	var suffix string
+
+	switch {
+	case absVal >= tb:
+		scaled = val / tb
+		suffix = "TB"
+	case absVal >= gb:
+		scaled = val / gb
+		suffix = "GB"
+	case absVal >= mb:
+		scaled = val / mb
+		suffix = "MB"
+	case absVal >= kb:
+		scaled = val / kb
+		suffix = "KB"
+	default:
+		scaled = val
+		suffix = "B"
+	}
+
+	return fmt.Sprintf("%.2f %s", scaled, suffix)
+}
+
+// formatDefault formats val with commas and decimal places based on magnitude.
+func formatDefault(val float64) string {
 
 	// Get the absolute value of the input value
 	absVal := math.Abs(val)

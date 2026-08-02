@@ -48,6 +48,11 @@ type GrafanaDashboard struct {
 }
 
 type GrafanaPanel struct {
+	FieldConfig struct {
+		Defaults struct {
+			Unit string `json:"unit"`
+		} `json:"defaults"`
+	} `json:"fieldConfig"`
 	Type  string `json:"type"`
 	Title string `json:"title"`
 	Yaxes []struct {
@@ -261,6 +266,11 @@ func mapGrafanaToLumo(dash YamlDashboard, grafanaDash *GrafanaDashboard) []Graph
 			unit := ""
 			if len(p.Yaxes) > 0 {
 				unit = p.Yaxes[0].Format
+			}
+
+			// If the unit is set in the field config, use it
+			if len(p.FieldConfig.Defaults.Unit) > 0 {
+				unit = p.FieldConfig.Defaults.Unit
 			}
 
 			// Extract each series PromQL expression
