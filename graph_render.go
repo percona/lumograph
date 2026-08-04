@@ -7,7 +7,6 @@ import (
 	"os"
 	"regexp"
 	"sort"
-	"time"
 
 	"go.uber.org/zap"
 	"gonum.org/v1/plot"
@@ -24,11 +23,7 @@ func generateGraph(lumoConfig *LumoConfig, cfg *GraphConfig, output string) erro
 	p := plot.New()
 	p.Title.Text = cfg.Title
 	p.Title.Padding = 20
-	p.X.Tick.Marker = plot.TimeTicks{
-		Ticker: HourlyTicker{},
-		Format: "15:04",
-		Time:   plot.UnixTimeIn(time.Local),
-	}
+	p.X.Tick.Marker = HourlyTicker{}
 	p.Y.Tick.Marker = CustomYTicker{Unit: cfg.Unit}
 	p.Legend.Padding = legendPadding
 

@@ -23,6 +23,9 @@ const (
 	percent_str     = "percent"
 	percentunit_str = "percentunit"
 	nanoseconds_str = "nanoseconds"
+
+	timeLabelFormat = "15:04"
+	dateLabelFormat = "Jan 02"
 )
 
 // Palette is a slice of Color{}s derived from Grafana's "classic" palette
@@ -64,18 +67,40 @@ func (g HourlyGrid) Plot(canvas draw.Canvas, plt *plot.Plot) {
 
 // HourlyTicker places major x-axis ticks at a clock-aligned interval of
 // ceil(spanHours/24) hours so at most ~24 timestamp labels appear.
+// Dates (Jan 02) are shown under the first tick of each calendar day.
 type HourlyTicker struct{}
 
 func (HourlyTicker) Ticks(minVal, maxVal float64) []plot.Tick {
 
 	if maxVal <= minVal {
-		return []plot.Tick{{Value: minVal, Label: " "}}
+		t := time.Unix(int64(minVal), 0).Local()
+
+		return []plot.Tick{{
+			Value: minVal,
+			Label: t.Format(timeLabelFormat) + "\n" + t.Format(dateLabelFormat),
+		}}
 	}
 
 	spanHours := (maxVal - minVal) / 3600
 	stepHours := max(1, int(math.Ceil(spanHours/24)))
+	ticks := hourlyTicks(minVal, maxVal, stepHours)
 
-	return hourlyTicks(minVal, maxVal, stepHours)
+	var prevDay time.Time
+
+	for i := range ticks {
+		t := time.Unix(int64(ticks[i].Value), 0).Local()
+		label := t.Format(timeLabelFormat)
+
+		day := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+		if i == 0 || !day.Equal(prevDay) {
+			label += "\n" + t.Format(dateLabelFormat)
+			prevDay = day
+		}
+
+		ticks[i].Label = label
+	}
+
+	return ticks
 }
 
 func hourlyTicks(minVal, maxVal float64, stepHours int) []plot.Tick {
@@ -87,7 +112,7 @@ func hourlyTicks(minVal, maxVal float64, stepHours int) []plot.Tick {
 		t = t.Add(time.Hour)
 	}
 
-	if t.Hour()%stepHours != 0 {
+	for t.Hour()%stepHours != 0 {
 		t = t.Add(time.Hour)
 		if float64(t.Unix()) > maxVal {
 			return ticks
