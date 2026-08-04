@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -20,6 +21,11 @@ import (
 
 // dipperUploadURL is the Dipper endpoint that receives the image archive.
 const dipperUploadURL = "https://dipper.perconatest.com/mizar/pmm"
+
+var (
+	dipperTokenRe     = regexp.MustCompile(`^dipper_[a-zA-Z0-9_-]{41}$`)
+	dipperProjectIDRe = regexp.MustCompile(`^(CS|RITM|PS)$`)
+)
 
 // executeDipperSync archives the images in the supplied directory and uploads
 // the resulting .tar.gz to Dipper.

@@ -156,11 +156,6 @@ func dipperSyncUsage(fs *flag.FlagSet) func() {
 	}
 }
 
-var (
-	dipperTokenRe     = regexp.MustCompile(`^dipper_[a-zA-Z0-9]{41}$`)
-	dipperProjectIDRe = regexp.MustCompile(`^(CS|RITM|PS)`)
-)
-
 // resolveToken returns the token from the -token flag, falling back to the
 // named environment variable. Providing both is an error.
 func resolveToken(cliToken, envVar string) string {
