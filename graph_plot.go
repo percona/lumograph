@@ -95,6 +95,8 @@ func (HourlyTicker) Ticks(minVal, maxVal float64) []plot.Tick {
 		if i == 0 || !day.Equal(prevDay) {
 			label += "\n" + t.Format(dateLabelFormat)
 			prevDay = day
+		} else {
+			label += "\n " // keep two-line height so times align
 		}
 
 		ticks[i].Label = label
