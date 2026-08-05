@@ -24,7 +24,7 @@ const dipperUploadURL = "https://dipper.perconatest.com/mizar/pmm"
 
 var (
 	dipperTokenRe     = regexp.MustCompile(`^dipper_[a-zA-Z0-9_-]{41}$`)
-	dipperProjectIDRe = regexp.MustCompile(`^(CS|RITM|PS)$`)
+	dipperProjectIDRe = regexp.MustCompile(`^(CS|RITM|PS)[0-9]+$`)
 )
 
 // executeDipperSync archives the images in the supplied directory and uploads
