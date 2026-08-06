@@ -289,9 +289,12 @@ func mapGrafanaToLumo(dash YamlDashboard, grafanaDash *GrafanaDashboard) []Graph
 				})
 			}
 
+			// Special case for "I/O"
+			title := strings.ReplaceAll(p.Title, "I/O", "IO")
+
 			// Add to our global config
 			lumoConfigs = append(lumoConfigs, GraphConfig{
-				Title:  p.Title,
+				Title:  title,
 				Groups: dash.Groups,
 				Unit:   unit,
 				Series: series,

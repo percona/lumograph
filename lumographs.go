@@ -195,7 +195,7 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title:  "InnoDB Data I/O",
+			Title:  "InnoDB Data IO",
 			Groups: []string{"innodb"},
 			Unit:   "ops",
 			Series: []SeriesConfig{
@@ -854,7 +854,7 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title:  "I/O Activity",
+			Title:  "IO Activity",
 			Groups: []string{"os"},
 			Unit:   "Bps",
 			Series: []SeriesConfig{
@@ -1680,7 +1680,7 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
-			Title:  "Cumulative Network I/O",
+			Title:  "Cumulative Network IO",
 			Groups: []string{"valkey"},
 			Unit:   "bytes",
 			Series: []SeriesConfig{
