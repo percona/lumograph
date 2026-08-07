@@ -259,6 +259,25 @@ var LumoGraphs = map[string][]GraphConfig{
 			},
 		},
 		{
+			Title:  "InnoDB Buffer Pool Data",
+			Groups: []string{"innodb"},
+			Unit:   "bytes",
+			Series: []SeriesConfig{
+				{
+					Legend: "Data Total",
+					Expr:   "avg by (service_name) (avg_over_time(mysql_global_status_innodb_buffer_pool_bytes_data{service_name=~\"$service_name\"}[$interval]) or avg_over_time(mysql_global_status_innodb_buffer_pool_bytes_data{service_name=~\"$service_name\"}[5m]))",
+				},
+				{
+					Legend: "Data Dirty",
+					Expr:   "avg by (service_name) (avg_over_time(mysql_global_status_innodb_buffer_pool_bytes_dirty{service_name=~\"$service_name\"}[$interval]) or avg_over_time(mysql_global_status_innodb_buffer_pool_bytes_dirty{service_name=~\"$service_name\"}[5m]))",
+				},
+				{
+					Legend: "Estimated Dirty Data Limit",
+					Expr:   "avg by (service_name) (sum((avg_over_time(mysql_global_status_innodb_buffer_pool_bytes_data{service_name=~\"$service_name\"}[$interval]) or avg_over_time(mysql_global_status_innodb_buffer_pool_bytes_data{service_name=~\"$service_name\"}[5m])))*sum(mysql_global_variables_innodb_max_dirty_pages_pct{service_name=~\"$service_name\"})/100)",
+				},
+			},
+		},
+		{
 			Title:  "InnoDB Buffer Pool Page Activity",
 			Groups: []string{"innodb"},
 			Unit:   "ops",

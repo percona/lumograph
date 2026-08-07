@@ -258,6 +258,9 @@ func mapGrafanaToLumo(dash YamlDashboard, grafanaDash *GrafanaDashboard) []Graph
 				continue
 			}
 
+			// Some titles have space at the end (PMM-15308), trim it before comparing
+			p.Title = strings.TrimSpace(p.Title)
+
 			// If we don't want this graph, skip and go to next
 			if !wantedGraphs[p.Title] {
 				continue
